@@ -15,7 +15,7 @@ import { logger } from '../utilities/logger';
 export class VersionsBl {
   private updateStatus: ProgressStatus = 'finished';
 
-  constructor() { }
+  constructor() {}
 
   /**
    * Update Casanet application to the latest version.
@@ -68,7 +68,6 @@ export class VersionsBl {
     const currentVersionInfo = await this.getCurrentVersion();
     return latestVersion === currentVersionInfo.version ? '' : latestVersion;
   }
-
 
   /** Get version update status */
   public async getUpdateStatus(): Promise<VersionUpdateStatus> {
@@ -205,7 +204,7 @@ export class VersionsBl {
       this.updateStatus = 'fail';
       logger.warn(
         `executing RESET_MACHINE_ON_VERSION_UPDATE=${RESET_MACHINE_ON_VERSION_UPDATE}' command failed ${error.stdout ||
-        error.message}`,
+          error.message}`,
       );
     }
   }

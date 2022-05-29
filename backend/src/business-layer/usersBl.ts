@@ -98,13 +98,13 @@ export class UsersBl {
      */
     if (sanitizeUser.password) {
       sanitizeUser.password = await bcrypt.hash(sanitizeUser.password, Configuration.keysHandling.bcryptSaltRounds);
-			// Once the password changed, remove required change flag
-			sanitizeUser.passwordChangeRequired = false;
+      // Once the password changed, remove required change flag
+      sanitizeUser.passwordChangeRequired = false;
     } else {
       const originalUser = await this.usersDal.getUser(sanitizeUser.email);
-			// Don't allow users change the required change flag
-			sanitizeUser.password = originalUser.password;
-			sanitizeUser.passwordChangeRequired = originalUser.passwordChangeRequired;
+      // Don't allow users change the required change flag
+      sanitizeUser.password = originalUser.password;
+      sanitizeUser.passwordChangeRequired = originalUser.passwordChangeRequired;
     }
     return sanitizeUser;
   }

@@ -31,8 +31,8 @@ try {
   configuration = fse.readJSONSync('./casanet.json');
 } catch (error) {
   logger.warn('Fail to read casanet.json configuration file. using default...');
-	// Use primitive json load just, to make sure the dist relative path stays the same, but the PKG will pack it inside the bundle.
-	configuration = require('../casanet.json') as Config;
+  // Use primitive json load just, to make sure the dist relative path stays the same, but the PKG will pack it inside the bundle.
+  configuration = require('../casanet.json') as Config;
 }
 
 /**

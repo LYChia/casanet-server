@@ -37,8 +37,9 @@ logger.info('home-iot-server app starting...');
 
 async function initServices() {
   try {
-
-    logger.info(`[home-iot-server] ------------------- ------------------- Initializing minions module... -------------------`);
+    logger.info(
+      `[home-iot-server] ------------------- ------------------- Initializing minions module... -------------------`,
+    );
     await MinionsBlSingleton.initMinionsModule();
     logger.info(`[home-iot-server] ------------------- Initializing minions module succeed -------------------`);
 
@@ -48,7 +49,9 @@ async function initServices() {
 
     logger.info(`[home-iot-server] ------------------- Initializing remote connection module... -------------------`);
     await RemoteConnectionBlSingleton.initRemoteConnectionModule();
-    logger.info(`[home-iot-server] ------------------- Initializing remote connection module succeed -------------------`);
+    logger.info(
+      `[home-iot-server] ------------------- Initializing remote connection module succeed -------------------`,
+    );
 
     logger.info(`[home-iot-server] ------------------- Initializing timings module... -------------------`);
     await TimingsBlSingleton.initTimingModule();
@@ -65,7 +68,9 @@ async function initServices() {
     // Start HTTP application
     logger.info(`[home-iot-server] ------------------- Initializing HTTP server... -------------------`);
     http.createServer(app).listen(Configuration.http.httpPort, () => {
-      logger.info(`[home-iot-server] ------------------- Initializing HTTP server on port ${Configuration.http.httpPort} succeed -------------------`);
+      logger.info(
+        `[home-iot-server] ------------------- Initializing HTTP server on port ${Configuration.http.httpPort} succeed -------------------`,
+      );
     });
 
     // SSL/HTTPS
@@ -83,7 +88,9 @@ async function initServices() {
         };
 
         https.createServer(sslOptions, app).listen(Configuration.http.httpsPort, () => {
-          logger.info(`[home-iot-server] ------------------- Initializing HTTPS server on port ${Configuration.http.httpPort} succeed -------------------`);
+          logger.info(
+            `[home-iot-server] ------------------- Initializing HTTPS server on port ${Configuration.http.httpPort} succeed -------------------`,
+          );
         });
       } catch (error) {
         logger.error(`Failed to load SSL certificate ${error}, exit...`);
@@ -91,14 +98,22 @@ async function initServices() {
       }
     }
   } catch (error) {
-    logger.error(`[home-iot-server] app services initialization failed, error: ${error} ${error?.message} ${JSON.stringify(error)}\nstack: ${error.stack}`);
+    logger.error(
+      `[home-iot-server] app services initialization failed, error: ${error} ${error?.message} ${JSON.stringify(
+        error,
+      )}\nstack: ${error.stack}`,
+    );
   }
 }
 
 // Catch uncaughtException instead of crashing
 process.on('uncaughtException', async (err: any) => {
   const error = new Error();
-  logger.error(`[home-iot-server] app uncaughtException, error: ${err} ${err?.message} ${JSON.stringify(err)}\nstack: ${err?.stack}`);
+  logger.error(
+    `[home-iot-server] app uncaughtException, error: ${err} ${err?.message} ${JSON.stringify(err)}\nstack: ${
+      err?.stack
+    }`,
+  );
 
   // start restart process....
   /** THIS IS A DANGERS ACTION! BE SURE THAT USER KNOW WHAT IT IS SET AS RESET COMMAND */
@@ -117,12 +132,11 @@ process.on('uncaughtException', async (err: any) => {
     await exec(RESET_APP_ON_FAILURE);
   } catch (error) {
     logger.error(
-      `executing RESET_APP_ON_FAILURE=${RESET_APP_ON_FAILURE}' command failed ${error.stdout ||
-      error.message}`,
+      `executing RESET_APP_ON_FAILURE=${RESET_APP_ON_FAILURE}' command failed ${error.stdout || error.message}`,
     );
   }
 });
-process.on('exit', (code) => {
+process.on('exit', code => {
   logger.warn(`[home-iot-server] About to exit with code: ${code}`);
 });
 process.on('SIGINT', () => {

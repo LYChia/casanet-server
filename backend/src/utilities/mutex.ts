@@ -1,12 +1,12 @@
 import { Semaphore } from 'await-semaphore';
-import { logger } from "./logger";
+import { logger } from './logger';
 
 const minionsAccessSemaphore = new Semaphore(1);
 
 export function MutexMinionsAccess(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
   const originalValue = descriptor.value;
 
-  descriptor.value = async function (...args: any[]) {
+  descriptor.value = async function(...args: any[]) {
     const release = await minionsAccessSemaphore.acquire();
     try {
       logger.debug(`[Mutex] Locking minion access for "${propertyKey}"`);
@@ -19,5 +19,5 @@ export function MutexMinionsAccess(target: any, propertyKey: string, descriptor:
       release();
       throw error;
     }
-  }
+  };
 }

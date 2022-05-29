@@ -10,13 +10,12 @@ import {
 } from './sharedInterfaces';
 
 declare global {
-	namespace Express {
-		interface Request {
-			user: User;
-		}
-	}
+  namespace Express {
+    interface Request {
+      user: User;
+    }
+  }
 }
-
 
 /**
  * Session key and meta.

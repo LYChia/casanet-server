@@ -1,8 +1,13 @@
 import * as fse from 'fs-extra';
-import { AcCommands, AirConditioningCommand, CommandsSet, RollerCommands, ToggleCommands } from '../models/backendInterfaces';
+import {
+  AcCommands,
+  AirConditioningCommand,
+  CommandsSet,
+  RollerCommands,
+  ToggleCommands,
+} from '../models/backendInterfaces';
 import { AirConditioning, ErrorResponse, Minion, MinionStatus } from '../models/sharedInterfaces';
 import { logger } from './logger';
-
 
 export interface CommandsCache {
   minionId: string;
@@ -13,17 +18,15 @@ export interface CommandsCache {
 }
 
 /**
- * A simple json cache implementation to use for any module needs. 
+ * A simple json cache implementation to use for any module needs.
  */
 export class CacheManager {
-  constructor(private cacheFilePath: string) {
+  constructor(private cacheFilePath: string) {}
 
-  }
-
-/**
- * Get cache JSON data sync.
- * Use it in init only. else the app will black until read finish.
- */
+  /**
+   * Get cache JSON data sync.
+   * Use it in init only. else the app will black until read finish.
+   */
   public getCacheDataSync(): any {
     try {
       return fse.readJSONSync(this.cacheFilePath);
@@ -32,9 +35,9 @@ export class CacheManager {
     }
   }
 
-/**
- * Get cache JSON data.
- */
+  /**
+   * Get cache JSON data.
+   */
   public async getCacheData(): Promise<any> {
     const data = await fse.readJSON(this.cacheFilePath).catch(err => {
       logger.warn(`Fail to read ${this.cacheFilePath} cache file, ${err}`);
@@ -56,8 +59,8 @@ export class CacheManager {
 }
 
 /**
- * Ir/Rf commands cache manager, used to get and update devices commands 
- * and get and update last devices status 
+ * Ir/Rf commands cache manager, used to get and update devices commands
+ * and get and update last devices status
  */
 // tslint:disable-next-line: max-classes-per-file
 export class CommandsCacheManager extends CacheManager {
@@ -74,8 +77,8 @@ export class CommandsCacheManager extends CacheManager {
 
   /**
    * Override minion commands with the new fetched commands set
-   * @param minion 
-   * @param commandsSet 
+   * @param minion
+   * @param commandsSet
    */
   public async setFetchedCommands(minion: Minion, commandsSet: CommandsSet) {
     const minionCache = this.getOrCreateMinionCache(minion);
@@ -94,10 +97,10 @@ export class CommandsCacheManager extends CacheManager {
     await this.saveCache();
   }
 
- /**
-  * Get last status, use in all devices that not holing any data, such as IR transmitter.
-  * @param minion minion to get last status for.
-  */
+  /**
+   * Get last status, use in all devices that not holing any data, such as IR transmitter.
+   * @param minion minion to get last status for.
+   */
   public async getCachedStatus(minion: Minion): Promise<MinionStatus | ErrorResponse> {
     const minionCache = this.getOrCreateMinionCache(minion);
     if (!minionCache.lastStatus) {
@@ -111,7 +114,6 @@ export class CommandsCacheManager extends CacheManager {
   }
 
   public async getRFToggleCommand(minion: Minion, status: MinionStatus): Promise<string | ErrorResponse> {
-
     const minionCache = this.getOrCreateMinionCache(minion);
 
     if (!minionCache.toggleCommands) {
@@ -135,7 +137,6 @@ export class CommandsCacheManager extends CacheManager {
   }
 
   public async getRFRollerCommand(minion: Minion, status: MinionStatus): Promise<string | ErrorResponse> {
-
     const minionCache = this.getOrCreateMinionCache(minion);
 
     if (!minionCache.rollerCommands) {
@@ -146,11 +147,11 @@ export class CommandsCacheManager extends CacheManager {
     }
 
     const hexCommandCode =
-      status.roller.status === 'off' ?
-        minionCache.rollerCommands.off :
-        status.roller.direction === 'up' ?
-          minionCache.rollerCommands.up :
-          minionCache.rollerCommands.down;
+      status.roller.status === 'off'
+        ? minionCache.rollerCommands.off
+        : status.roller.direction === 'up'
+        ? minionCache.rollerCommands.up
+        : minionCache.rollerCommands.down;
 
     if (!hexCommandCode) {
       throw {
@@ -163,7 +164,6 @@ export class CommandsCacheManager extends CacheManager {
   }
 
   public async getIrCommand(minion: Minion, setStatus: MinionStatus): Promise<string | ErrorResponse> {
-
     const minionCache = this.getOrCreateMinionCache(minion);
 
     if (!minionCache.acCommands) {
@@ -206,8 +206,11 @@ export class CommandsCacheManager extends CacheManager {
     await this.saveCache();
   }
 
-  public async cacheIRACommand(minion: Minion, statusToRecordFor: MinionStatus, hexIRCommand: string): Promise<void | ErrorResponse> {
-
+  public async cacheIRACommand(
+    minion: Minion,
+    statusToRecordFor: MinionStatus,
+    hexIRCommand: string,
+  ): Promise<void | ErrorResponse> {
     const minionCache = this.getOrCreateMinionCache(minion);
 
     /** If status is off, just save it. */
@@ -234,8 +237,11 @@ export class CommandsCacheManager extends CacheManager {
     await this.saveCache();
   }
 
-  public async cacheRFRollerCommand(minion: Minion, statusToRecordFor: MinionStatus, hexRfCommand: string): Promise<void | ErrorResponse> {
-
+  public async cacheRFRollerCommand(
+    minion: Minion,
+    statusToRecordFor: MinionStatus,
+    hexRfCommand: string,
+  ): Promise<void | ErrorResponse> {
     const minionCache = this.getOrCreateMinionCache(minion);
 
     if (!minionCache.rollerCommands) {
@@ -245,7 +251,6 @@ export class CommandsCacheManager extends CacheManager {
         off: '',
       };
     }
-
 
     if (statusToRecordFor.roller.status === 'off') {
       minionCache.rollerCommands.off = hexRfCommand;
@@ -261,9 +266,8 @@ export class CommandsCacheManager extends CacheManager {
   public async cacheRFToggleCommand(
     minion: Minion,
     statusToRecordFor: MinionStatus,
-    hexRfCommand: string
+    hexRfCommand: string,
   ): Promise<void | ErrorResponse> {
-
     const minionCache = this.getOrCreateMinionCache(minion);
 
     if (!minionCache.toggleCommands) {
@@ -286,14 +290,12 @@ export class CommandsCacheManager extends CacheManager {
   private async saveCache() {
     try {
       await this.setCacheData(this.cache);
-    } catch (error) {
-
-    }
+    } catch (error) {}
   }
 
   /**
    * Get minion cache commands and status, if not exists create it.
-   * @param minion 
+   * @param minion
    */
   private getOrCreateMinionCache(minion: Minion): CommandsCache {
     for (const minionCache of this.cache) {

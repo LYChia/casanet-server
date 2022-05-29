@@ -425,7 +425,7 @@ describe('Minions BL tests', () => {
       const pysicalInfo: LocalNetworkDevice = {
         mac: '777777ee',
         ip: '192.168.1.58',
-        name: "------------",
+        name: '------------',
         vendor: 'factory name',
       };
 

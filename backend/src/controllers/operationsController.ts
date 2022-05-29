@@ -33,7 +33,7 @@ export class OperationsController extends Controller {
   @Security('adminAuth')
   @Response<ErrorResponse>(501, 'Server error')
   @Get()
-	@Deprecated()
+  @Deprecated()
   public async getOperations(): Promise<Operation[]> {
     return await OperationsBlSingleton.getOperations();
   }
@@ -46,7 +46,7 @@ export class OperationsController extends Controller {
   @Security('adminAuth')
   @Response<ErrorResponse>(501, 'Server error')
   @Get('{operationId}')
-	@Deprecated()
+  @Deprecated()
   public async getOperation(operationId: string): Promise<Operation> {
     return await OperationsBlSingleton.getOperationById(operationId);
   }
@@ -60,7 +60,7 @@ export class OperationsController extends Controller {
   @Security('adminAuth')
   @Response<ErrorResponse>(501, 'Server error')
   @Put('{operationId}')
-	@Deprecated()
+  @Deprecated()
   public async setOperation(operationId: string, @Body() operation: Operation): Promise<void> {
     return await OperationsBlSingleton.SetOperation(operationId, operation);
   }
@@ -73,7 +73,7 @@ export class OperationsController extends Controller {
   @Security('adminAuth')
   @Response<ErrorResponse>(501, 'Server error')
   @Delete('{operationId}')
-	@Deprecated()
+  @Deprecated()
   public async deleteOperation(operationId: string): Promise<void> {
     return await OperationsBlSingleton.DeleteOperation(operationId);
   }
@@ -86,7 +86,7 @@ export class OperationsController extends Controller {
   @Security('adminAuth')
   @Response<ErrorResponse>(501, 'Server error')
   @Post()
-	@Deprecated()
+  @Deprecated()
   public async createOperation(@Body() operation: Operation): Promise<void> {
     return await OperationsBlSingleton.CreateOperation(operation);
   }
@@ -100,7 +100,7 @@ export class OperationsController extends Controller {
   @Security('adminAuth')
   @Response<ErrorResponse>(501, 'Server error')
   @Post('trigger/{operationId}')
-	@Deprecated()
+  @Deprecated()
   public async triggerOperation(operationId: string): Promise<OperationResult[]> {
     return await OperationsBlSingleton.triggerOperationById(operationId);
   }

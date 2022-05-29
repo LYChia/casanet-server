@@ -34,7 +34,6 @@ interface BroadlinkAPI {
 }
 
 export class BroadlinkHandler extends BrandModuleBase {
-
   public readonly brandName: string = 'broadlink';
 
   public readonly devices: DeviceKind[] = [
@@ -80,11 +79,11 @@ export class BroadlinkHandler extends BrandModuleBase {
     },
   ];
 
-  private commandsCacheManager = new CommandsCacheManager(super.cacheFilePath)
+  private commandsCacheManager = new CommandsCacheManager(super.cacheFilePath);
 
   public constructor() {
     super();
-    this.fetchDevicesStateInterval()
+    this.fetchDevicesStateInterval();
   }
 
   public async getStatus(minion: Minion): Promise<MinionStatus | ErrorResponse> {
@@ -248,7 +247,7 @@ export class BroadlinkHandler extends BrandModuleBase {
    * @param minion minion to get last status for.
    */
   private async getCachedStatus(minion: Minion): Promise<MinionStatus | ErrorResponse> {
-    // Detect if the broadlink device communication is alive 
+    // Detect if the broadlink device communication is alive
     await this.getBroadlinkInstance(minion);
     return await this.commandsCacheManager.getCachedStatus(minion);
   }
@@ -273,7 +272,7 @@ export class BroadlinkHandler extends BrandModuleBase {
   private async setRFToggleStatus(minion: Minion, setStatus: MinionStatus): Promise<void | ErrorResponse> {
     const broadlink = (await this.getBroadlinkInstance(minion)) as BroadlinkAPI;
 
-    const hexCommandCode = await this.commandsCacheManager.getRFToggleCommand(minion, setStatus) as string;
+    const hexCommandCode = (await this.commandsCacheManager.getRFToggleCommand(minion, setStatus)) as string;
 
     await this.sendBeamCommand(broadlink, hexCommandCode);
 
@@ -283,7 +282,7 @@ export class BroadlinkHandler extends BrandModuleBase {
   private async setRFRollerStatus(minion: Minion, setStatus: MinionStatus): Promise<void | ErrorResponse> {
     const broadlink = (await this.getBroadlinkInstance(minion)) as BroadlinkAPI;
 
-    const hexCommandCode = await this.commandsCacheManager.getRFRollerCommand(minion, setStatus) as string;
+    const hexCommandCode = (await this.commandsCacheManager.getRFRollerCommand(minion, setStatus)) as string;
 
     await this.sendBeamCommand(broadlink, hexCommandCode);
 
@@ -293,7 +292,7 @@ export class BroadlinkHandler extends BrandModuleBase {
   private async setIrAcStatus(minion: Minion, setStatus: MinionStatus): Promise<void | ErrorResponse> {
     const broadlink = (await this.getBroadlinkInstance(minion)) as BroadlinkAPI;
 
-    const hexCommandCode = await this.commandsCacheManager.getIrCommand(minion, setStatus) as string;
+    const hexCommandCode = (await this.commandsCacheManager.getIrCommand(minion, setStatus)) as string;
 
     await this.sendBeamCommand(broadlink, hexCommandCode);
     /** In case AC has missed the sent command, send it again. */
@@ -357,7 +356,7 @@ export class BroadlinkHandler extends BrandModuleBase {
           }
 
           // Get the curr state
-          const currStatus = await this.getStatus(minion) as MinionStatus;
+          const currStatus = (await this.getStatus(minion)) as MinionStatus;
 
           if (minion.minionStatus[minion.minionType].status === currStatus[minion.minionType].status) {
             continue;
@@ -365,11 +364,13 @@ export class BroadlinkHandler extends BrandModuleBase {
 
           this.minionStatusChangedEvent.post({
             minionId: minion.minionId,
-            status: currStatus
+            status: currStatus,
           });
         }
       } catch (error) {
-        logger.debug(`[broadlinkHandler.fetchDevicesStateInterval] Fetching curr state fail, error : ${JSON.stringify(error)}`);
+        logger.debug(
+          `[broadlinkHandler.fetchDevicesStateInterval] Fetching curr state fail, error : ${JSON.stringify(error)}`,
+        );
       }
     }
   }

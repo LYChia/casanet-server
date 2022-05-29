@@ -14,12 +14,12 @@ import { Login, Minion } from '../../src/models/sharedInterfaces';
 import { User } from '../../src/models/sharedInterfaces';
 
 (function initServices() {
-    MinionsBlSingleton.initMinionsModule();
-    TimelineBlSingleton.initTimelineModule();
-    RemoteConnectionBlSingleton.initRemoteConnectionModule();
-    TimingsBlSingleton.initTimingModule();
-    TimeoutBlSingleton.initTimeoutModule();
-    CalibrateBlSingleton.initCalibrateModule();
+  MinionsBlSingleton.initMinionsModule();
+  TimelineBlSingleton.initTimelineModule();
+  RemoteConnectionBlSingleton.initRemoteConnectionModule();
+  TimingsBlSingleton.initTimingModule();
+  TimeoutBlSingleton.initTimeoutModule();
+  CalibrateBlSingleton.initCalibrateModule();
 })();
 
 /**

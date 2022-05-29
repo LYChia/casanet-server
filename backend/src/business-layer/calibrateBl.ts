@@ -95,7 +95,7 @@ export class CalibrateBl {
       if (
         this.lastCalibrateMap[minion.minionId] &&
         now.getTime() - this.lastCalibrateMap[minion.minionId].getTime() <
-        moment.duration(minion.calibration.calibrationCycleMinutes, 'minutes').asMilliseconds()
+          moment.duration(minion.calibration.calibrationCycleMinutes, 'minutes').asMilliseconds()
       ) {
         continue;
       }
@@ -124,19 +124,19 @@ export class CalibrateBl {
      */
     const minionStatus = DeepCopy<MinionStatus>(minion.minionStatus || emptyStatus);
 
-		let triggerType: MinionChangeTrigger = 'sync';
+    let triggerType: MinionChangeTrigger = 'sync';
 
     switch (minion.calibration.calibrationMode) {
       case 'LOCK_ON':
-				triggerType = 'lock';
+        triggerType = 'lock';
         minionStatus[minion.minionType].status = 'on';
         break;
       case 'LOCK_OFF':
-				triggerType = 'lock';
+        triggerType = 'lock';
         minionStatus[minion.minionType].status = 'off';
         break;
       case 'SHABBAT':
-				triggerType = 'rotation';
+        triggerType = 'rotation';
         minionStatus[minion.minionType].status = minionStatus[minion.minionType].status === 'off' ? 'on' : 'off';
         break;
       default:
@@ -144,9 +144,15 @@ export class CalibrateBl {
     }
 
     try {
-      logger.debug(`[CalibrateBl.calibrateMinion] Setting minion "${minion.minionId}" status "${JSON.stringify(minionStatus)}" ...`);
+      logger.debug(
+        `[CalibrateBl.calibrateMinion] Setting minion "${minion.minionId}" status "${JSON.stringify(
+          minionStatus,
+        )}" ...`,
+      );
       await this.minionsBl.setMinionStatus(minion.minionId, minionStatus, triggerType);
-      logger.debug(`[CalibrateBl.calibrateMinion] Setting minion ${minion.minionId} calibration successfully activated`);
+      logger.debug(
+        `[CalibrateBl.calibrateMinion] Setting minion ${minion.minionId} calibration successfully activated`,
+      );
     } catch (error) {
       logger.warn(`Calibrate minion ${minion.minionId} fail, ${JSON.stringify(error)}`);
     }

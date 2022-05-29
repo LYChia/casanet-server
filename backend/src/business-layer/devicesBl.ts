@@ -100,7 +100,7 @@ export class DevicesBl {
     }
 
     // Merge all devices into one collection, while the network devices in the first
-    this.localDevices = [...networkDevices, ...unconnectedDevices,];
+    this.localDevices = [...networkDevices, ...unconnectedDevices];
   }
 }
 

@@ -42,7 +42,6 @@ export class TimeoutBl {
    */
   private isTimeoutPossessing: boolean = false;
 
-
   /**
    * Init TimeoutBl . using dependency injection pattern to allow units testings.
    * @param minionsBl Inject minionsBl instance.
@@ -70,7 +69,6 @@ export class TimeoutBl {
      * Then register to changes feed.
      */
     this.minionsBl.minionFeed.attach(minionFeed => {
-
       switch (minionFeed.event) {
         case 'created':
         case 'update':
@@ -105,9 +103,8 @@ export class TimeoutBl {
   }
 
   private async timeoutActivation(): Promise<void> {
-
     // If currently the timeoutActivation in action, ignore other calls
-    if(this.isTimeoutPossessing){
+    if (this.isTimeoutPossessing) {
       return;
     }
 
@@ -144,7 +141,11 @@ export class TimeoutBl {
          */
         minionStatus[minion.minionType].status = 'off';
 
-        logger.debug(`[TimeoutBl.timeoutActivation] Setting minion "${minion.minionId}" status "${JSON.stringify(minionStatus)}" ...`);
+        logger.debug(
+          `[TimeoutBl.timeoutActivation] Setting minion "${minion.minionId}" status "${JSON.stringify(
+            minionStatus,
+          )}" ...`,
+        );
         await this.minionsBl.setMinionStatus(timeoutMinion.minionId, minionStatus, 'timeout');
         logger.debug(`[TimeoutBl.timeoutActivation] Setting minion ${minion.minionId} timeout successfully activated`);
 

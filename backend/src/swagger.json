@@ -140,7 +140,7 @@
 					},
 					"isFetchCommandsAvailable": {
 						"type": "boolean",
-						"description": "Whenever the device and module supported fetching commands data from \r\nthe https://github.com/casanet/rf-commands-repo project"
+						"description": "Whenever the device and module supported fetching commands data from\r\nthe https://github.com/casanet/rf-commands-repo project"
 					}
 				},
 				"required": [
@@ -1780,6 +1780,7 @@
 				"tags": [
 					"Ifttt"
 				],
+				"deprecated": true,
 				"security": [
 					{
 						"adminAuth": []
@@ -1811,6 +1812,7 @@
 				"tags": [
 					"Ifttt"
 				],
+				"deprecated": true,
 				"security": [
 					{
 						"adminAuth": []
@@ -1851,6 +1853,7 @@
 				"tags": [
 					"Ifttt"
 				],
+				"deprecated": true,
 				"security": [
 					{
 						"iftttAuth": []
@@ -1891,6 +1894,7 @@
 				"tags": [
 					"Ifttt"
 				],
+				"deprecated": true,
 				"security": [
 					{
 						"iftttAuth": []
@@ -1942,6 +1946,7 @@
 				"tags": [
 					"Ifttt"
 				],
+				"deprecated": true,
 				"security": [
 					{
 						"iftttAuth": []
@@ -2764,6 +2769,7 @@
 				"tags": [
 					"Operations"
 				],
+				"deprecated": true,
 				"security": [
 					{
 						"userAuth": []
@@ -2795,6 +2801,7 @@
 				"tags": [
 					"Operations"
 				],
+				"deprecated": true,
 				"security": [
 					{
 						"userAuth": []
@@ -2846,6 +2853,7 @@
 				"tags": [
 					"Operations"
 				],
+				"deprecated": true,
 				"security": [
 					{
 						"userAuth": []
@@ -2886,6 +2894,7 @@
 				"tags": [
 					"Operations"
 				],
+				"deprecated": true,
 				"security": [
 					{
 						"userAuth": []
@@ -2938,6 +2947,7 @@
 				"tags": [
 					"Operations"
 				],
+				"deprecated": true,
 				"security": [
 					{
 						"userAuth": []
@@ -2991,6 +3001,7 @@
 				"tags": [
 					"Operations"
 				],
+				"deprecated": true,
 				"security": [
 					{
 						"userAuth": []

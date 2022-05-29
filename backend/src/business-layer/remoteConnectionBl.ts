@@ -69,9 +69,7 @@ export class RemoteConnectionBl {
     private remoteConnectionDal: RemoteConnectionDal,
     private minionsBl: MinionsBl,
     private timingsBl: TimingsBl,
-  ) {
-
-  }
+  ) {}
 
   public async initRemoteConnectionModule() {
     /** Use chai testing lib, to mock http requests */
@@ -123,19 +121,23 @@ export class RemoteConnectionBl {
        * (If remote server not set yet, there is no point to try sending ack).
        */
       if (this.remoteConnectionStatus !== 'connectionOK' && this.remoteConnectionStatus !== 'cantReachRemoteServer') {
-				logger.debug(`[RemoteConnectionBl][initRemoteConnectionModule] remoteConnectionStatus "${this.remoteConnectionStatus}" ignoring ping send`)
+        logger.debug(
+          `[RemoteConnectionBl][initRemoteConnectionModule] remoteConnectionStatus "${this.remoteConnectionStatus}" ignoring ping send`,
+        );
         return;
       }
 
       if (!this.ackPongReceived) {
-				logger.warn('[RemoteConnectionBl][initRemoteConnectionModule] There is no pong respond, marking "remoteConnectionStatus" as "cantReachRemoteServer" and closing channel')
+        logger.warn(
+          '[RemoteConnectionBl][initRemoteConnectionModule] There is no pong respond, marking "remoteConnectionStatus" as "cantReachRemoteServer" and closing channel',
+        );
         this.remoteConnectionStatus = 'cantReachRemoteServer';
-				this.closeRemoteConnection();
-				this.connectToRemote();
-				return;
+        this.closeRemoteConnection();
+        this.connectToRemote();
+        return;
       }
 
-			logger.info('[RemoteConnectionBl][initRemoteConnectionModule] Remote connection is OK, sending ping...')
+      logger.info('[RemoteConnectionBl][initRemoteConnectionModule] Remote connection is OK, sending ping...');
       this.remoteConnectionStatus = 'connectionOK';
 
       this.ackPongReceived = false;
@@ -185,7 +187,7 @@ export class RemoteConnectionBl {
    * Disconnect from remote server, and delete his settings.
    */
   public async removeRemoteSettings() {
-		logger.info('[RemoteConnectionBl][removeRemoteSettings] Removing & disconnecting remote server...')
+    logger.info('[RemoteConnectionBl][removeRemoteSettings] Removing & disconnecting remote server...');
     this.closeRemoteConnection();
     this.remoteConnectionStatus = 'notConfigured';
     await this.remoteConnectionDal.deleteRemoteSettings();
@@ -320,36 +322,38 @@ export class RemoteConnectionBl {
    * @param localMessage message to send
    */
   private sendMessage(localMessage: LocalMessage) {
-		// Dont even try to send message in cause remote server not configured al all
+    // Dont even try to send message in cause remote server not configured al all
     if (this.remoteConnectionStatus !== 'connectionOK' && this.remoteConnectionStatus !== 'cantReachRemoteServer') {
       return;
     }
     try {
       this.webSocketClient.sendData(JSON.stringify(localMessage));
     } catch (error) {
-      logger.error(`[RemoteConnectionBl.sendMessage] sending message to remote server "${localMessage.localMessagesType}" failed, ${error.message}`);
+      logger.error(
+        `[RemoteConnectionBl.sendMessage] sending message to remote server "${localMessage.localMessagesType}" failed, ${error.message}`,
+      );
 
-			// In case of failure, close the connection, and try to reopen it from scratch
-			if (localMessage.localMessagesType === 'ack') {
-				logger.info(`[RemoteConnectionBl.sendMessage] During the WS error, manually closing the WS, and reopening ...`);
-				this.remoteConnectionStatus = 'cantReachRemoteServer';
-				this.closeRemoteConnection();
-				this.connectToRemote();
-			}
+      // In case of failure, close the connection, and try to reopen it from scratch
+      if (localMessage.localMessagesType === 'ack') {
+        logger.info(`[RemoteConnectionBl.sendMessage] During the WS error, manually closing the WS, and reopening ...`);
+        this.remoteConnectionStatus = 'cantReachRemoteServer';
+        this.closeRemoteConnection();
+        this.connectToRemote();
+      }
     }
   }
 
   /** Close manually web socket to remote server */
   private closeRemoteConnection() {
-		logger.info(`[RemoteConnectionBl.closeRemoteConnection] Closing remote channel ...`);
+    logger.info(`[RemoteConnectionBl.closeRemoteConnection] Closing remote channel ...`);
     try {
       this.webSocketClient.disconnect();
-    } catch (error) { }
+    } catch (error) {}
   }
 
   /** Connect to remote server by web sockets */
   private async connectToRemote() {
-		logger.info(`[RemoteConnectionBl.connectToRemote] Connecting to remote channel ...`);
+    logger.info(`[RemoteConnectionBl.connectToRemote] Connecting to remote channel ...`);
 
     /** Get remote server settings */
     const remoteSettings = await this.remoteConnectionDal.getRemoteSettings();
@@ -368,17 +372,22 @@ export class RemoteConnectionBl {
     this.webSocketClient = new WebSocketClient(3000, false);
 
     this.webSocketClient.on('open', () => {
-			this.ackPongReceived = true;
+      this.ackPongReceived = true;
       this.remoteConnectionStatus = 'connectionOK';
-      logger.info(`[RemoteConnectionBl.connectToRemote][on-open] Ws channel to ${remoteSettings.host} opened successfully`);
+      logger.info(
+        `[RemoteConnectionBl.connectToRemote][on-open] Ws channel to ${remoteSettings.host} opened successfully`,
+      );
     });
 
     this.webSocketClient.on('message', async (rawRemoteMessage: string) => {
       try {
-				this.ackPongReceived = true;
+        this.ackPongReceived = true;
         await this.onRemoteServerMessage(rawRemoteMessage);
       } catch (error) {
-        logger.error(`[RemoteConnectionBl.connectToRemote][on-message] Ws message parsing & handling filed row message: ${rawRemoteMessage}\n error ${error.message || JSON.stringify(error)}`);
+        logger.error(
+          `[RemoteConnectionBl.connectToRemote][on-message] Ws message parsing & handling filed row message: ${rawRemoteMessage}\n error ${error.message ||
+            JSON.stringify(error)}`,
+        );
       }
     });
 
@@ -387,7 +396,9 @@ export class RemoteConnectionBl {
     });
 
     this.webSocketClient.on('close', (code: number, reason: string) => {
-      logger.info(`[RemoteConnectionBl.connectToRemote][on-close] Ws channel closed ${remoteSettings.host} code: ${code} reason: ${reason}`);
+      logger.info(
+        `[RemoteConnectionBl.connectToRemote][on-close] Ws channel closed ${remoteSettings.host} code: ${code} reason: ${reason}`,
+      );
       if (this.remoteConnectionStatus !== 'connectionOK') {
         return;
       }
@@ -395,7 +406,9 @@ export class RemoteConnectionBl {
     });
 
     this.webSocketClient.on('reconnect', () => {
-      logger.info(`[RemoteConnectionBl.connectToRemote][on-reconnect] Ws channel trying reconnect ${remoteSettings.host}`);
+      logger.info(
+        `[RemoteConnectionBl.connectToRemote][on-reconnect] Ws channel trying reconnect ${remoteSettings.host}`,
+      );
     });
 
     logger.info(`[RemoteConnectionBl.connectToRemote] Opening ws channel to ${remoteSettings.host}`);
@@ -440,7 +453,7 @@ export class RemoteConnectionBl {
   }
 
   private async OnArkOk() {
-		logger.info('[RemoteConnectionBl][OnArkOk] Remote connection sent pong')
+    logger.info('[RemoteConnectionBl][OnArkOk] Remote connection sent pong');
     this.ackPongReceived = true;
     this.remoteConnectionStatus = 'connectionOK';
   }
@@ -454,8 +467,8 @@ export class RemoteConnectionBl {
       localMessagesType: 'logs',
       message: {
         logs: logsData,
-      }
-    })
+      },
+    });
   }
 
   private onRegisterUserResults(forwardUserResults: { user: string; results?: ErrorResponse }) {
@@ -508,7 +521,9 @@ export class RemoteConnectionBl {
    * @param errorResponse Error message from remote server.
    */
   private async onAuthenticationFail(errorResponse: ErrorResponse) {
-    logger.error(`[RemoteConnectionBl.onAuthenticationFail] Authenticate local server in remote server fail, ${errorResponse.message}`);
+    logger.error(
+      `[RemoteConnectionBl.onAuthenticationFail] Authenticate local server in remote server fail, ${errorResponse.message}`,
+    );
     this.closeRemoteConnection();
     logger.info(`[RemoteConnectionBl.onAuthenticationFail] Setting remoteConnectionStatus as 'authorizationFail'`);
     this.remoteConnectionStatus = 'authorizationFail';
@@ -523,7 +538,9 @@ export class RemoteConnectionBl {
       const remoteSettings = await this.remoteConnectionDal.getRemoteSettings();
 
       if (!remoteSettings) {
-        logger.error(`[RemoteConnectionBl.onInitReady] There is no way to connect remote server, remote settings data not exist`);
+        logger.error(
+          `[RemoteConnectionBl.onInitReady] There is no way to connect remote server, remote settings data not exist`,
+        );
         this.closeRemoteConnection();
         logger.info(`[RemoteConnectionBl.onInitReady] Setting remoteConnectionStatus as 'notConfigured'`);
         this.remoteConnectionStatus = 'notConfigured';
@@ -542,7 +559,9 @@ export class RemoteConnectionBl {
         },
       });
     } catch (error) {
-      logger.error(`[RemoteConnectionBl.onInitReady] There is no way to connect remote server, fail to get init connection ${error}`);
+      logger.error(
+        `[RemoteConnectionBl.onInitReady] There is no way to connect remote server, fail to get init connection ${error}`,
+      );
       this.closeRemoteConnection();
     }
   }
@@ -577,7 +596,10 @@ export class RemoteConnectionBl {
     request.set('Cookie', `session=${httpRequest.httpSession}`);
 
     /** send request and wait for response */
-    const response = await request.send(httpRequest.httpBody).buffer().parse(binaryResponseParser);
+    const response = await request
+      .send(httpRequest.httpBody)
+      .buffer()
+      .parse(binaryResponseParser);
 
     /** Send the body as string, so select the string encoding based on the response type */
     let httpBody = '';

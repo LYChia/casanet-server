@@ -12,7 +12,7 @@ describe('Security scopes validation middelwere', () => {
         cookies: {
           session: validSession.userSessionKey,
         },
-				headers: {},
+        headers: {},
       };
       const user = (await expressAuthentication(faksRequest as express.Request, SystemAuthScopes.userScope).catch(
         () => {
@@ -31,7 +31,7 @@ describe('Security scopes validation middelwere', () => {
         cookies: {
           session: 'abc1234567',
         },
-				headers: {},
+        headers: {},
       };
       expressAuthentication(faksRequest as express.Request, SystemAuthScopes.userScope)
         .then(() => {
@@ -48,7 +48,7 @@ describe('Security scopes validation middelwere', () => {
     it('it should denied', async () => {
       const faksRequest = {
         cookies: {},
-				headers: {},
+        headers: {},
       };
       expressAuthentication(faksRequest as express.Request, SystemAuthScopes.userScope)
         .then(() => {
@@ -73,7 +73,7 @@ describe('Security scopes validation middelwere', () => {
         cookies: {
           session: validSession.adminSessionKey,
         },
-				headers: {},
+        headers: {},
       };
       const user = (await expressAuthentication(faksRequest as express.Request, SystemAuthScopes.adminScope).catch(
         () => {
@@ -92,7 +92,7 @@ describe('Security scopes validation middelwere', () => {
         cookies: {
           session: validSession.userSessionKey,
         },
-				headers: {},
+        headers: {},
       };
       try {
         await expressAuthentication(faksRequest as express.Request, 'testScop');
@@ -111,7 +111,7 @@ describe('Security scopes validation middelwere', () => {
         cookies: {
           session: validSession.userSessionKey,
         },
-				headers: {},
+        headers: {},
       };
       try {
         await expressAuthentication(faksRequest as express.Request, '');

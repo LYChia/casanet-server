@@ -109,18 +109,15 @@ export class UsersDal {
    * used when system in first use and there is no any user in system, yet.
    */
   private async setDefaultUser() {
-		/**
+    /**
      * Used machine address as default user password.
      * This is for security reasons the default user password is the machine MAC address,
      * So attackers can access server with default user only if they know the machine MAC address.
      */
-		 const password = await getMachineMacAddress();
+    const password = await getMachineMacAddress();
 
     /** Get password from configuration, and hash it like any other password in system */
-    const passwordHash = bcrypt.hashSync(
-      password,
-      Configuration.keysHandling.bcryptSaltRounds,
-    );
+    const passwordHash = bcrypt.hashSync(password, Configuration.keysHandling.bcryptSaltRounds);
 
     this.users.push({
       displayName: Configuration.defaultUser.displayName,
@@ -128,7 +125,7 @@ export class UsersDal {
       ignoreTfa: Configuration.defaultUser.ignoreTfa,
       password: passwordHash,
       scope: Configuration.defaultUser.scope,
-			passwordChangeRequired: true,
+      passwordChangeRequired: true,
     });
 
     logger.warn(

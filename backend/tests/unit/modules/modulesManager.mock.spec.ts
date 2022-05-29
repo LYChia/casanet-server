@@ -89,7 +89,7 @@ export class ModulesManagerMock {
     return;
   }
 
-  public async refreshModules(): Promise<void> { }
+  public async refreshModules(): Promise<void> {}
 
-  public async refreshModule(brand: string): Promise<void> { }
+  public async refreshModule(brand: string): Promise<void> {}
 }

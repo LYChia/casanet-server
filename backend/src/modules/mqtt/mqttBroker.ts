@@ -16,20 +16,20 @@ export class MqttBroker {
    * @returns  The broker ip.
    */
   public async invokeBroker(port: number): Promise<string> {
-		this.server = createServer(aedes.Server());
-		
-		this.server.listen(port, () => {
+    this.server = createServer(aedes.Server());
+
+    this.server.listen(port, () => {
       logger.info(`[MqttBroker] aedes mqtt server on ${ip.address()}:${port} is up and running`);
-		});
-		this.server.on('close' ,() => {
+    });
+    this.server.on('close', () => {
       logger.warn(`[MqttBroker] aedes mqtt server  ${ip.address()}:${port} is closed`);
-		});
-		this.server.on('connection' ,() => {
+    });
+    this.server.on('connection', () => {
       logger.info(`[MqttBroker] aedes mqtt server  ${ip.address()}:${port} connection arrived`);
-		});
-		this.server.on('error' ,() => {
+    });
+    this.server.on('error', () => {
       logger.error(`[MqttBroker] aedes mqtt server  ${ip.address()}:${port} got error`);
-		});
+    });
 
     return ip.address();
   }

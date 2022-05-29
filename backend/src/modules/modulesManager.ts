@@ -40,7 +40,7 @@ export class ModulesManager {
   public minionStatusChangedEvent = new SyncEvent<{
     minionId: string;
     status: MinionStatus;
-  }>(); 
+  }>();
 
   /**
    * Allows to retrieve minions array. (used as proxy for all modulus).
@@ -79,14 +79,24 @@ export class ModulesManager {
     }
 
     try {
-      logger.debug(`[ModulesManager.getStatus] getting minion "${minion.minionId}" status using "${minionModule.brandName}" module ...`);
-      const status = await withTimeout(minionModule.getStatus(minion), this.COMMUNICATE_DEVICE_TIMEOUT.asMilliseconds());
-      logger.debug(`[ModulesManager.getStatus] getting minion "${minion.minionId}" status "${JSON.stringify(status)}" succeed`);
+      logger.debug(
+        `[ModulesManager.getStatus] getting minion "${minion.minionId}" status using "${minionModule.brandName}" module ...`,
+      );
+      const status = await withTimeout(
+        minionModule.getStatus(minion),
+        this.COMMUNICATE_DEVICE_TIMEOUT.asMilliseconds(),
+      );
+      logger.debug(
+        `[ModulesManager.getStatus] getting minion "${minion.minionId}" status "${JSON.stringify(status)}" succeed`,
+      );
       return status;
     } catch (error) {
-      logger.warn(`[ModulesManager.getStatus] getting minion "${minion.minionId}" status failed ${error.message || JSON.stringify(error)}`);
+      logger.warn(
+        `[ModulesManager.getStatus] getting minion "${minion.minionId}" status failed ${error.message ||
+          JSON.stringify(error)}`,
+      );
 
-       if (error instanceof TimeoutError) {
+      if (error instanceof TimeoutError) {
         throw {
           responseCode: 1503,
           message: 'communication with device fail, timeout',
@@ -115,15 +125,19 @@ export class ModulesManager {
     }
 
     try {
-      logger.debug(`[ModulesManager.setStatus] setting minion "${minion.minionId}" status "${JSON.stringify(setStatus)}" using "${minionModule.brandName}" module ...`);
-      await withTimeout(
-        minionModule.setStatus(minion, setStatus),
-        this.COMMUNICATE_DEVICE_TIMEOUT.asMilliseconds(),
+      logger.debug(
+        `[ModulesManager.setStatus] setting minion "${minion.minionId}" status "${JSON.stringify(setStatus)}" using "${
+          minionModule.brandName
+        }" module ...`,
       );
+      await withTimeout(minionModule.setStatus(minion, setStatus), this.COMMUNICATE_DEVICE_TIMEOUT.asMilliseconds());
       logger.debug(`[ModulesManager.setStatus] setting minion "${minion.minionId}" status succeed`);
     } catch (error) {
-      logger.warn(`[ModulesManager.getStatus] setting minion "${minion.minionId}" status failed ${error.message || JSON.stringify(error)}`);
-       if (error instanceof TimeoutError) {
+      logger.warn(
+        `[ModulesManager.getStatus] setting minion "${minion.minionId}" status failed ${error.message ||
+          JSON.stringify(error)}`,
+      );
+      if (error instanceof TimeoutError) {
         throw {
           responseCode: 1503,
           message: 'communication with device fail, timeout',
@@ -169,7 +183,7 @@ export class ModulesManager {
         this.COMMUNICATE_DEVICE_TIMEOUT.asMilliseconds(),
       );
     } catch (error) {
-       if (error instanceof TimeoutError) {
+      if (error instanceof TimeoutError) {
         throw {
           responseCode: 1503,
           message: 'communication with device fail, timeout',
@@ -215,7 +229,7 @@ export class ModulesManager {
         this.COMMUNICATE_DEVICE_TIMEOUT.asMilliseconds(),
       );
     } catch (error) {
-       if (error instanceof TimeoutError) {
+      if (error instanceof TimeoutError) {
         throw {
           responseCode: 1503,
           message: 'communication with device fail, timeout',
@@ -260,7 +274,7 @@ export class ModulesManager {
         this.COMMUNICATE_DEVICE_TIMEOUT.asMilliseconds(),
       );
     } catch (error) {
-       if (error instanceof TimeoutError) {
+      if (error instanceof TimeoutError) {
         throw {
           responseCode: 1503,
           message: 'communication with device fail, timeout',
@@ -279,7 +293,7 @@ export class ModulesManager {
     for (const brandHandler of this.modulesHandlers) {
       try {
         await withTimeout(brandHandler.refreshCommunication(), this.COMMUNICATE_DEVICE_TIMEOUT.asMilliseconds());
-      } catch (error) { }
+      } catch (error) {}
     }
   }
 
@@ -302,7 +316,7 @@ export class ModulesManager {
     try {
       return await withTimeout(minionModule.refreshCommunication(), this.COMMUNICATE_DEVICE_TIMEOUT.asMilliseconds());
     } catch (error) {
-       if (error instanceof TimeoutError) {
+      if (error instanceof TimeoutError) {
         throw {
           responseCode: 1503,
           message: 'communication with device fail, timeout',

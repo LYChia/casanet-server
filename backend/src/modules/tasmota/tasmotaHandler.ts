@@ -46,7 +46,7 @@ export class TasmotaHandler extends BrandModuleBase {
     },
   ];
 
-  private commandsCacheManager = new CommandsCacheManager(super.cacheFilePath)
+  private commandsCacheManager = new CommandsCacheManager(super.cacheFilePath);
 
   constructor() {
     super();
@@ -123,7 +123,6 @@ export class TasmotaHandler extends BrandModuleBase {
   private async getBeamStatus(minion: Minion): Promise<MinionStatus | ErrorResponse> {
     try {
       await request(`http://${minion.device.pysicalDevice.ip}/cm?cmnd=State`);
-
     } catch (error) {
       logger.warn(`Sent Tasmota command ${minion.minionId} fail, ${JSON.stringify(error.message)}`);
       throw {
@@ -152,9 +151,9 @@ export class TasmotaHandler extends BrandModuleBase {
       const pulesArray = broadlinkToPulesArray(hexCommandCode);
 
       // Convert the pules array to string separated by coma
-      let pulsString = (pulesArray.reduce((pulesString, pules) => {
+      let pulsString = pulesArray.reduce((pulesString, pules) => {
         return `${pulesString}${pules},`;
-      }, ''));
+      }, '');
 
       // Remove the last coma
       pulsString = pulsString.substring(0, pulsString.length - 1);
@@ -178,12 +177,12 @@ export class TasmotaHandler extends BrandModuleBase {
   }
 
   private async setToggleStatus(minion: Minion, setStatus: MinionStatus): Promise<void | ErrorResponse> {
-    const hexCommandCode = await this.commandsCacheManager.getRFToggleCommand(minion, setStatus) as string;
+    const hexCommandCode = (await this.commandsCacheManager.getRFToggleCommand(minion, setStatus)) as string;
     await this.sendIrCommand(minion, setStatus, hexCommandCode);
   }
 
   private async setAcStatus(minion: Minion, setStatus: MinionStatus): Promise<void | ErrorResponse> {
-    const hexCommandCode = await this.commandsCacheManager.getIrCommand(minion, setStatus) as string;
+    const hexCommandCode = (await this.commandsCacheManager.getIrCommand(minion, setStatus)) as string;
     await this.sendIrCommand(minion, setStatus, hexCommandCode);
   }
 
@@ -204,13 +203,12 @@ export class TasmotaHandler extends BrandModuleBase {
    * @returns The HexCommand code in the broadlink format
    */
   private async recordCommand(minion: Minion): Promise<string> {
-
     const getRawConsoleDataRequest = `http://${minion.device.pysicalDevice.ip}/cs?c2=0`;
 
     for (let index = 0; index < 5; index++) {
       try {
         await Delay(moment.duration(2, 'seconds'));
-        const rawConsoleDataRequest = await request(getRawConsoleDataRequest) as string;
+        const rawConsoleDataRequest = (await request(getRawConsoleDataRequest)) as string;
         let rawConsoleLines = rawConsoleDataRequest.split('\n');
         rawConsoleLines = rawConsoleLines.slice(Math.max(rawConsoleLines.length - 3, 0)).reverse();
 
@@ -222,7 +220,11 @@ export class TasmotaHandler extends BrandModuleBase {
           }
         }
       } catch (error) {
-        logger.debug(`[TasmotaHandler.recordCommand] failed to read or parse IR results, try ${index}, error ${JSON.stringify(error)}`);
+        logger.debug(
+          `[TasmotaHandler.recordCommand] failed to read or parse IR results, try ${index}, error ${JSON.stringify(
+            error,
+          )}`,
+        );
       }
     }
 
