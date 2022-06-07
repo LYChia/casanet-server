@@ -94,6 +94,26 @@ export declare interface LocalNetworkDevice {
 }
 
 /**
+ * Represents any physical device in a local network.
+ */
+ export declare interface BluetoothDevice {
+    /**
+     * Display name.
+     */
+    name?: string;
+  
+    /**
+     * The MAC address of the device, the value is unique to each device.
+     */
+    mac: string;
+  
+    /**
+     * Info about device manufacturer.
+     */
+    vendor?: string;
+  }
+
+/**
  * Represents a physical device kind with network info.
  */
 export declare interface MinionDevice {
