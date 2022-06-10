@@ -24,6 +24,7 @@ export class DevicesBl {
    * Init DevicesBl . using dependecy injection pattern to allow units testings.
    * @param devicesDal Inject devices dal.
    * @param localNetworkReader Inject the reader function.
+   * @param modulesManager ???
    */
   constructor(
     devicesDal: DevicesDal,

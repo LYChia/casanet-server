@@ -19,6 +19,7 @@ import { DeepCopy } from '../utilities/deepCopy';
 import { logger } from '../utilities/logger';
 import { Delay } from '../utilities/sleep';
 import { DevicesBl, DevicesBlSingleton } from './devicesBl';
+import { BluetoothDevicesBl, BluetoothDevicesBlSingleton } from './bluetoothDeviceBl';
 import { SyncEvent } from 'ts-events';
 
 export class MinionsBl {
@@ -29,6 +30,7 @@ export class MinionsBl {
   // Dependencies
   private minionsDal: MinionsDal;
   private devicesBl: DevicesBl;
+  private bluetoothBl: BluetoothDevicesBl;
   private modulesManager: ModulesManager;
   private scanningStatus: ProgressStatus = 'finished';
 
@@ -46,9 +48,10 @@ export class MinionsBl {
    * Init minions bl. using dependency injection pattern to allow units testings.
    * @param minionsDal Inject the dal instance.
    */
-  constructor(minionsDal: MinionsDal, devicesBl: DevicesBl, modulesManager: ModulesManager) {
+  constructor(minionsDal: MinionsDal, devicesBl: DevicesBl, bluetoothBl: BluetoothDevicesBl, modulesManager: ModulesManager) {
     this.minionsDal = minionsDal;
     this.devicesBl = devicesBl;
+    this.bluetoothBl = bluetoothBl;
     this.modulesManager = modulesManager;
   }
 
@@ -526,6 +529,12 @@ export class MinionsBl {
     await this.devicesBl.rescanNetwork();
 
     /**
+     * Scan bluetooth on startup
+     */
+    this.bluetoothBl.initBluetooth();
+    await this.bluetoothBl.rescanBluetooth();
+
+    /**
      * Get network local devices
      */
     const localDevices = await this.devicesBl.getDevices();
@@ -758,4 +767,4 @@ export class MinionsBl {
   }
 }
 
-export const MinionsBlSingleton = new MinionsBl(MinionsDalSingleton, DevicesBlSingleton, ModulesManagerSingltone);
+export const MinionsBlSingleton = new MinionsBl(MinionsDalSingleton, DevicesBlSingleton, BluetoothDevicesBlSingleton, ModulesManagerSingltone);

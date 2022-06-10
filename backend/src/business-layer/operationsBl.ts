@@ -19,7 +19,7 @@ export class OperationsBl {
   /**
    * Init OperationsBl . using dependency injection pattern to allow units testings.
    * @param operationsDal Inject operations dal.
-   * @param localNetworkReader Inject the reader function.
+   * @param minionsBl ???
    */
   constructor(private operationsDal: OperationsDal, private minionsBl: MinionsBl) {}
 

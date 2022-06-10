@@ -65,6 +65,22 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "BluetoothDevice": {
+        "dataType": "refObject",
+        "properties": {
+            "customName": {"dataType":"string"},
+            "name": {"dataType":"string"},
+            "uuid": {"dataType":"string","required":true},
+            "address": {"dataType":"string","required":true},
+            "rssi": {"dataType":"double"},
+            "connectionState": {"dataType":"string"},
+            "addressType": {"dataType":"string"},
+            "connectable": {"dataType":"boolean"},
+            "serviceUuids": {"dataType":"array","array":{"dataType":"string"},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "LocalNetworkDevice": {
         "dataType": "refObject",
         "properties": {
@@ -696,6 +712,101 @@ export function RegisterRoutes(app: express.Router) {
 
 
             const promise = controller.getSettingsBackup.apply(controller, validatedArgs as any);
+            promiseHandler(controller, promise, response, undefined, next);
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/API/devices/bluetooth',
+            authenticateMiddleware([{"userAuth":[]},{"adminAuth":[]}]),
+
+            function DevicesController_getBluetoothDevices(request: any, response: any, next: any) {
+            const args = {
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+            } catch (err) {
+                return next(err);
+            }
+
+            const controller = new DevicesController();
+
+
+            const promise = controller.getBluetoothDevices.apply(controller, validatedArgs as any);
+            promiseHandler(controller, promise, response, undefined, next);
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.put('/API/devices/bluetooth/:uuid',
+            authenticateMiddleware([{"userAuth":[]},{"adminAuth":[]}]),
+
+            function DevicesController_setBluetoothDeviceConfig(request: any, response: any, next: any) {
+            const args = {
+                    uuid: {"in":"path","name":"uuid","required":true,"dataType":"string"},
+                    device: {"in":"body","name":"device","required":true,"ref":"BluetoothDevice"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+            } catch (err) {
+                return next(err);
+            }
+
+            const controller = new DevicesController();
+
+
+            const promise = controller.setBluetoothDeviceConfig.apply(controller, validatedArgs as any);
+            promiseHandler(controller, promise, response, undefined, next);
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/API/devices/bluetooth/detail/:uuids',
+            authenticateMiddleware([{"userAuth":[]},{"adminAuth":[]}]),
+
+            function DevicesController_getBluetoothDeviceDetail(request: any, response: any, next: any) {
+            const args = {
+                    uuids: {"in":"path","name":"uuids","required":true,"dataType":"string"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+            } catch (err) {
+                return next(err);
+            }
+
+            const controller = new DevicesController();
+
+
+            const promise = controller.getBluetoothDeviceDetail.apply(controller, validatedArgs as any);
+            promiseHandler(controller, promise, response, undefined, next);
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.post('/API/devices/bluetooth/rescan',
+            authenticateMiddleware([{"userAuth":[]},{"adminAuth":[]}]),
+
+            function DevicesController_rescanBluetoothDevices(request: any, response: any, next: any) {
+            const args = {
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+            } catch (err) {
+                return next(err);
+            }
+
+            const controller = new DevicesController();
+
+
+            const promise = controller.rescanBluetoothDevices.apply(controller, validatedArgs as any);
             promiseHandler(controller, promise, response, undefined, next);
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa

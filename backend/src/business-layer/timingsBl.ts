@@ -37,7 +37,7 @@ export class TimingsBl {
   /**
    * Init TimingsBl . using dependency injection pattern to allow units testings.
    * @param timingsDal Inject timings dal.
-   * @param localNetworkReader Inject the reader function.
+   * @param operationBl Inject operation bl.
    */
   constructor(private timingsDal: TimingsDal, private operationBl: OperationsBl) {}
 

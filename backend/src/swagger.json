@@ -66,6 +66,58 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"BluetoothDevice": {
+				"description": "Represents any physical device in a local network.",
+				"properties": {
+					"customName": {
+						"type": "string",
+						"description": "Custom name."
+					},
+					"name": {
+						"type": "string",
+						"description": "Device name."
+					},
+					"uuid": {
+						"type": "string",
+						"description": "The UUID of the device, the value is unique to each device. (Is equal to address but remove semicolon and lowercase.)"
+					},
+					"address": {
+						"type": "string",
+						"description": "Mac address of the device."
+					},
+					"rssi": {
+						"type": "number",
+						"format": "double",
+						"description": "Signal strength."
+					},
+					"connectionState": {
+						"type": "string",
+						"description": "Connection state."
+					},
+					"addressType": {
+						"type": "string",
+						"description": "Address type. (eg. public)"
+					},
+					"connectable": {
+						"type": "boolean",
+						"description": "Is device connectable."
+					},
+					"serviceUuids": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array",
+						"description": "Available device service uuids."
+					}
+				},
+				"required": [
+					"uuid",
+					"address",
+					"serviceUuids"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"LocalNetworkDevice": {
 				"description": "Represents any physical device in a local network.",
 				"properties": {
@@ -1492,6 +1544,188 @@
 				},
 				"description": "Get the current server data as a ZIP file",
 				"security": [
+					{
+						"adminAuth": []
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/devices/bluetooth": {
+			"get": {
+				"operationId": "GetBluetoothDevices",
+				"responses": {
+					"200": {
+						"description": "Local network devices array.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/BluetoothDevice"
+									},
+									"type": "array"
+								}
+							}
+						}
+					},
+					"501": {
+						"description": "Server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get all bluetooth devices in the local network.",
+				"tags": [
+					"Devices"
+				],
+				"security": [
+					{
+						"userAuth": []
+					},
+					{
+						"adminAuth": []
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/devices/bluetooth/{uuid}": {
+			"put": {
+				"operationId": "SetBluetoothDeviceConfig",
+				"responses": {
+					"204": {
+						"description": "No content"
+					},
+					"501": {
+						"description": "Server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Configure a device.",
+				"tags": [
+					"Devices"
+				],
+				"security": [
+					{
+						"userAuth": []
+					},
+					{
+						"adminAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "Device uuid.",
+						"in": "path",
+						"name": "uuid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/BluetoothDevice"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/devices/bluetooth/detail/{uuids}": {
+			"get": {
+				"operationId": "GetBluetoothDeviceDetail",
+				"responses": {
+					"200": {
+						"description": "Bluetooth devices detail information.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/BluetoothDevice"
+									},
+									"type": "array"
+								}
+							}
+						}
+					},
+					"501": {
+						"description": "Server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get specific bluetooth device(s) detail.",
+				"tags": [
+					"Devices"
+				],
+				"security": [
+					{
+						"userAuth": []
+					},
+					{
+						"adminAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "Device(s) uuid (split with comma).",
+						"in": "path",
+						"name": "uuids",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/devices/bluetooth/rescan": {
+			"post": {
+				"operationId": "RescanBluetoothDevices",
+				"responses": {
+					"204": {
+						"description": "No content"
+					},
+					"501": {
+						"description": "Server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Rescan all devices in LAN.\r\nUsed when there are changes in the local network.\r\nFor example, if the router (DHCP server) change IP's of devices or new device connect to the local network etc.",
+				"tags": [
+					"Devices"
+				],
+				"security": [
+					{
+						"userAuth": []
+					},
 					{
 						"adminAuth": []
 					}
