@@ -178,6 +178,36 @@ export declare interface MinionDevice {
 }
 
 /**
+ * Represents a physical device kind with network info.
+ */
+ export declare interface BluetoothMinionDevice {
+    /**
+     * The physical network device.
+     */
+    pysicalDevice: BluetoothDevice;
+
+    /**
+     * The brand of device.
+     */
+    brand: string;
+
+    /**
+     *  The specific model of the device.
+     */
+    model: string;
+
+    /**
+     *Some devices require a token for communication API.
+     */
+    token?: string;
+
+    /**
+     * Some devices require id for communication API.
+     */
+    deviceId?: string;
+}
+
+/**
  * For each supported device, there are limitations and abilities of it.
  */
 export declare interface DeviceKind {
@@ -278,7 +308,8 @@ export declare type MinionTypes =
     | 'airConditioning'
     | 'light'
     | 'temperatureLight'
-    | 'colorLight';
+    | 'colorLight'
+    | 'fanOfStm32';
 
 /**
  * Supported timings types.
@@ -311,6 +342,11 @@ export declare type FanStrengthOptions = 'low' | 'med' | 'high' | 'auto';
 export declare type SwitchOptions = 'on' | 'off';
 
 /**
+ * Switches option
+ */
+ export declare type FanOptions = 'mode1' | 'mode2' | 'mode3';
+
+/**
  * Roller direction
  */
 export declare type RollerDirection = 'up' | 'down';
@@ -327,6 +363,14 @@ export declare type CleanerMode = 'dock' | 'clean';
  */
 export declare interface Toggle {
     status: SwitchOptions;
+}
+
+/**
+ * A fan value, the fan is on STM32 device,
+ * For example fan has mode1, mode2, mode3
+ */
+ export declare interface Fan {
+    status: FanOptions;
 }
 
 /**
@@ -522,6 +566,13 @@ export declare interface MinionStatus {
 }
 
 /**
+ *  Minion status, the available values depend on the minion type.
+ */
+ export declare interface BluetoothMinionStatus {
+    fan?: Fan;
+}
+
+/**
  * Feed update type enum.
  */
 export declare type FeedEvent = 'created' | 'update' | 'removed';
@@ -540,12 +591,35 @@ export declare type MinionChangeTrigger =
     | 'external';
 
 /**
+ * The minion status change triggers
+ */
+export declare type BluetoothMinionChangeTrigger =
+| 'user'
+| 'device'
+| 'timeout'
+| 'timing'
+| 'lock'
+| 'sync'
+| 'rotation'
+| 'external';
+
+/**
  * Minion feed object.
  */
 export declare interface MinionFeed {
     event: FeedEvent;
     minion: Minion;
     trigger?: MinionChangeTrigger;
+    user?: User;
+}
+
+/**
+ * Bluetooth Minion feed object.
+ */
+ export declare interface BluetoothMinionFeed {
+    event: FeedEvent;
+    bluetoothMinion: BluetoothMinion;
+    trigger?: BluetoothMinionChangeTrigger;
     user?: User;
 }
 
@@ -635,6 +709,62 @@ export declare interface Minion {
      * Status of minion (based on minion type).
      */
     minionStatus: MinionStatus;
+
+    /**
+     * Minion type.
+     */
+    minionType: MinionTypes;
+
+    /**
+     * Auto turns  off duration, *if* set member value then the minion will turn off in X ms after turning it on,
+     * Used for example in boiler minion etc.
+     */
+    minionAutoTurnOffMS?: number;
+
+    /**
+     * Calibrate the physical device with the server known status, in a periodic cycle,
+     * and allow locking the status.
+     */
+    calibration?: MinionCalibrate;
+
+    /**
+     * Represents the room where the minion is located at.
+     */
+    room?: string;
+}
+
+/**
+ * Represents a minion in system.
+ * Minion is a logic device in the system, meaning that a device is a physical device and minion is a logic device
+ * that uses a physical device to switch home kit status. For example, an IR transmitter can be one physical device
+ * for a few minions, one to central AC control and second for secondary AC control
+ * so in it will be two totally different minions that use one physical device.
+ */
+ export declare interface BluetoothMinion {
+    /**
+     * Minion unique id.
+     */
+    minionId?: string;
+
+    /**
+     * The display name for a minion.
+     */
+    name: string;
+
+    /**
+     * Physical device of minion.
+     */
+    device: BluetoothMinionDevice;
+
+    /**
+     * Is communication with device status ok.
+     */
+    isProperlyCommunicated?: boolean;
+
+    /**
+     * Status of minion (based on minion type).
+     */
+    minionStatus: BluetoothMinionStatus;
 
     /**
      * Minion type.

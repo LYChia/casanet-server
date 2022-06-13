@@ -1,5 +1,5 @@
 import { IDataIO } from '../models/backendInterfaces';
-import { ErrorResponse, Minion, MinionCalibrate } from '../models/sharedInterfaces';
+import { ErrorResponse, Minion, BluetoothMinion, MinionCalibrate } from '../models/sharedInterfaces';
 import { DataIO } from './dataIO';
 
 const MINIONS_FILE_NAME = 'minions.json';
@@ -11,11 +11,13 @@ export class MinionsDal {
    * minions.
    */
   private minions: Minion[] = [];
+  private bluetoothMinions: BluetoothMinion[] = [];
 
   constructor(dataIo: IDataIO) {
     this.dataIo = dataIo;
 
     this.minions = dataIo.getDataSync();
+    this.bluetoothMinions = dataIo.getDataSync();
   }
 
   /**
@@ -23,6 +25,13 @@ export class MinionsDal {
    */
   public async getMinions(): Promise<Minion[]> {
     return this.minions;
+  }
+
+  /**
+ * Get all minions as array.
+ */
+  public async getBluetoothMinions(): Promise<BluetoothMinion[]> {
+    return this.bluetoothMinions;
   }
 
   /**
@@ -94,6 +103,63 @@ export class MinionsDal {
 
     await this.dataIo.setData(this.minions).catch(() => {
       throw new Error('fail to save minion new name update request');
+    });
+  }
+
+
+  /**
+   * Save new minion.
+   * @param newMinion minoin to create.
+   */
+  public async createBluetoothMinion(newMinion: BluetoothMinion): Promise<void> {
+    this.bluetoothMinions.push(newMinion);
+
+    await this.dataIo.setData(this.bluetoothMinions).catch(() => {
+      this.bluetoothMinions.splice(this.bluetoothMinions.indexOf(newMinion), 1);
+      throw new Error('fail to save minion');
+    });
+  }
+
+  /**
+   * Delete minion.
+   * @param minion minion to delete.
+   */
+  public async deleteBluetoothMinion(minion: BluetoothMinion): Promise<void> {
+    const originalMinion = this.findBluetoothMinion(minion.minionId);
+
+    if (!originalMinion) {
+      throw {
+        responseCode: 1404,
+        message: 'minion not exist',
+      } as ErrorResponse;
+    }
+
+    this.bluetoothMinions.splice(this.bluetoothMinions.indexOf(originalMinion), 1);
+    await this.dataIo.setData(this.bluetoothMinions).catch(() => {
+      this.bluetoothMinions.push(originalMinion);
+      throw new Error('fail to save minion delete request');
+    });
+  }
+
+  /**
+   * Rename minion.
+   * @param minionId minion id.
+   * @param nameToSet the new name to set.
+   */
+  public async renameBluetoothMinion(minionId: string, nameToSet: string): Promise<void> {
+    const originalMinion = this.findBluetoothMinion(minionId);
+
+    if (!originalMinion) {
+      throw {
+        responseCode: 1404,
+        message: 'bluetooth minion not exist',
+      } as ErrorResponse;
+    }
+
+    originalMinion.name = nameToSet;
+
+    await this.dataIo.setData(this.bluetoothMinions).catch(() => {
+      throw new Error('fail to save bluetooth minion new name update request');
     });
   }
 
@@ -173,6 +239,17 @@ export class MinionsDal {
       }
     }
   }
+
+    /**
+   * Find minion in minions array
+   */
+     private findBluetoothMinion(minionId: string): BluetoothMinion {
+      for (const minion of this.bluetoothMinions) {
+        if (minion.minionId === minionId) {
+          return minion;
+        }
+      }
+    }
 }
 
 export const MinionsDalSingleton = new MinionsDal(new DataIO(MINIONS_FILE_NAME));

@@ -94,7 +94,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "MinionTypes": {
         "dataType": "refAlias",
-        "type": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["toggle"]},{"dataType":"enum","enums":["switch"]},{"dataType":"enum","enums":["roller"]},{"dataType":"enum","enums":["cleaner"]},{"dataType":"enum","enums":["airConditioning"]},{"dataType":"enum","enums":["light"]},{"dataType":"enum","enums":["temperatureLight"]},{"dataType":"enum","enums":["colorLight"]}],"validators":{}},
+        "type": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["toggle"]},{"dataType":"enum","enums":["switch"]},{"dataType":"enum","enums":["roller"]},{"dataType":"enum","enums":["cleaner"]},{"dataType":"enum","enums":["airConditioning"]},{"dataType":"enum","enums":["light"]},{"dataType":"enum","enums":["temperatureLight"]},{"dataType":"enum","enums":["colorLight"]},{"dataType":"enum","enums":["fanOfStm32"]}],"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "DeviceKind": {
@@ -502,6 +502,55 @@ const models: TsoaRoute.Models = {
         "dataType": "refObject",
         "properties": {
             "scanningStatus": {"ref":"ProgressStatus","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "BluetoothMinionDevice": {
+        "dataType": "refObject",
+        "properties": {
+            "pysicalDevice": {"ref":"BluetoothDevice","required":true},
+            "brand": {"dataType":"string","required":true},
+            "model": {"dataType":"string","required":true},
+            "token": {"dataType":"string"},
+            "deviceId": {"dataType":"string"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "FanOptions": {
+        "dataType": "refAlias",
+        "type": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["mode1"]},{"dataType":"enum","enums":["mode2"]},{"dataType":"enum","enums":["mode3"]}],"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Fan": {
+        "dataType": "refObject",
+        "properties": {
+            "status": {"ref":"FanOptions","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "BluetoothMinionStatus": {
+        "dataType": "refObject",
+        "properties": {
+            "fan": {"ref":"Fan"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "BluetoothMinion": {
+        "dataType": "refObject",
+        "properties": {
+            "minionId": {"dataType":"string"},
+            "name": {"dataType":"string","required":true},
+            "device": {"ref":"BluetoothMinionDevice","required":true},
+            "isProperlyCommunicated": {"dataType":"boolean"},
+            "minionStatus": {"ref":"BluetoothMinionStatus","required":true},
+            "minionType": {"ref":"MinionTypes","required":true},
+            "minionAutoTurnOffMS": {"dataType":"double"},
+            "calibration": {"ref":"MinionCalibrate"},
+            "room": {"dataType":"string"},
         },
         "additionalProperties": false,
     },
@@ -1191,6 +1240,31 @@ export function RegisterRoutes(app: express.Router) {
             promiseHandler(controller, promise, response, undefined, next);
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.put('/API/minions/bluetooth/rename/:minionId',
+            authenticateMiddleware([{"userAuth":[]},{"adminAuth":[]}]),
+
+            function MinionsController_renameBluetoothMinion(request: any, response: any, next: any) {
+            const args = {
+                    minionId: {"in":"path","name":"minionId","required":true,"dataType":"string"},
+                    minionRename: {"in":"body","name":"minionRename","required":true,"ref":"MinionRename"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+            } catch (err) {
+                return next(err);
+            }
+
+            const controller = new MinionsController();
+
+
+            const promise = controller.renameBluetoothMinion.apply(controller, validatedArgs as any);
+            promiseHandler(controller, promise, response, undefined, next);
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.put('/API/minions/room/:minionId',
             authenticateMiddleware([{"userAuth":[]},{"adminAuth":[]}]),
 
@@ -1361,6 +1435,30 @@ export function RegisterRoutes(app: express.Router) {
             promiseHandler(controller, promise, response, undefined, next);
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.delete('/API/minions/bluetooth/:minionId',
+            authenticateMiddleware([{"userAuth":[]},{"adminAuth":[]}]),
+
+            function MinionsController_deleteBluetoothMinion(request: any, response: any, next: any) {
+            const args = {
+                    minionId: {"in":"path","name":"minionId","required":true,"dataType":"string"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+            } catch (err) {
+                return next(err);
+            }
+
+            const controller = new MinionsController();
+
+
+            const promise = controller.deleteBluetoothMinion.apply(controller, validatedArgs as any);
+            promiseHandler(controller, promise, response, undefined, next);
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.post('/API/minions',
             authenticateMiddleware([{"userAuth":[]},{"adminAuth":[]}]),
 
@@ -1382,6 +1480,30 @@ export function RegisterRoutes(app: express.Router) {
 
 
             const promise = controller.createMinion.apply(controller, validatedArgs as any);
+            promiseHandler(controller, promise, response, undefined, next);
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.post('/API/minions/bluetooth',
+            authenticateMiddleware([{"userAuth":[]},{"adminAuth":[]}]),
+
+            function MinionsController_createBluetoothMinion(request: any, response: any, next: any) {
+            const args = {
+                    minion: {"in":"body","name":"minion","required":true,"ref":"BluetoothMinion"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+            } catch (err) {
+                return next(err);
+            }
+
+            const controller = new MinionsController();
+
+
+            const promise = controller.createBluetoothMinion.apply(controller, validatedArgs as any);
             promiseHandler(controller, promise, response, undefined, next);
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -1433,6 +1555,29 @@ export function RegisterRoutes(app: express.Router) {
             promiseHandler(controller, promise, response, undefined, next);
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/API/minions/bluetooth',
+            authenticateMiddleware([{"userAuth":[]},{"adminAuth":[]}]),
+
+            function MinionsController_getBluetoothMinions(request: any, response: any, next: any) {
+            const args = {
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+            } catch (err) {
+                return next(err);
+            }
+
+            const controller = new MinionsController();
+
+
+            const promise = controller.getBluetoothMinions.apply(controller, validatedArgs as any);
+            promiseHandler(controller, promise, response, undefined, next);
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.get('/API/minions/:minionId',
             authenticateMiddleware([{"userAuth":[]},{"adminAuth":[]}]),
 
@@ -1454,6 +1599,30 @@ export function RegisterRoutes(app: express.Router) {
 
 
             const promise = controller.getMinion.apply(controller, validatedArgs as any);
+            promiseHandler(controller, promise, response, undefined, next);
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/API/minions/bluetooth/:minionId',
+            authenticateMiddleware([{"userAuth":[]},{"adminAuth":[]}]),
+
+            function MinionsController_getBluetoothMinion(request: any, response: any, next: any) {
+            const args = {
+                    minionId: {"in":"path","name":"minionId","required":true,"dataType":"string"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+            } catch (err) {
+                return next(err);
+            }
+
+            const controller = new MinionsController();
+
+
+            const promise = controller.getBluetoothMinion.apply(controller, validatedArgs as any);
             promiseHandler(controller, promise, response, undefined, next);
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa

@@ -2,27 +2,20 @@ import * as moment from 'moment';
 import { timeout as withTimeout, TimeoutError } from 'promise-timeout';
 import { PullBehavior } from 'pull-behavior';
 import { Configuration } from '../config';
-import { DeviceKind, ErrorResponse, Minion, MinionDevice, MinionStatus } from '../models/sharedInterfaces';
+import { DeviceKind, ErrorResponse, BluetoothMinion, BluetoothMinionDevice, BluetoothMinionStatus } from '../models/sharedInterfaces';
 import { MutexMinionsAccess } from '../utilities/mutex';
-import { BrandModuleBase } from './brandModuleBase';
+import { BluetoothBrandModuleBase } from './bluetoothBrandModuleBase';
 import { SyncEvent } from 'ts-events';
 
 ///////////////////////////////////////////////////////////////////////////////
 //////////////// TO EXTEND: Place here handler reference //////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 import { CommandsSet } from '../models/backendInterfaces';
-import { BroadlinkHandler } from './broadlink/broadlinkHandler';
-import { IftttHandler } from './ifttt/iftttHandler';
-import { MiioHandler } from './miio/miioHandler';
+import { STM32Handler } from './stm32/stm32Handler';
 import { MockHandler } from './mock/mockHandler';
-import { MqttHandler } from './mqtt/mqttHandler';
-import { OrviboHandler } from './orvibo/orviboHandler';
-import { TasmotaHandler } from './tasmota/tasmotaHandler';
-import { TuyaHandler } from './tuya/tuyaHandler';
-import { YeelightHandler } from './yeelight/yeelightHandler';
 import { logger } from '../utilities/logger';
 
-export class ModulesManager {
+export class BluetoothModulesManager {
   /**
    * Get all devices kinds of all brands.
    */
@@ -39,24 +32,24 @@ export class ModulesManager {
    */
   public minionStatusChangedEvent = new SyncEvent<{
     minionId: string;
-    status: MinionStatus;
+    status: BluetoothMinionStatus;
   }>();
 
   /**
    * Allows to retrieve minions array. (used as proxy for all modulus).
    */
-  public retrieveMinions: PullBehavior<Minion[]> = new PullBehavior<Minion[]>();
+  public retrieveMinions: PullBehavior<BluetoothMinion[]> = new PullBehavior<BluetoothMinion[]>();
   private readonly COMMUNICATE_DEVICE_TIMEOUT = moment.duration(15, 'seconds');
 
   /**
    * All modules handlers
    */
-  private modulesHandlers: BrandModuleBase[] = [];
+  private modulesHandlers: BluetoothBrandModuleBase[] = [];
 
   constructor() {
     /** Currently, do not coverage modules, only 'mock' for other tests. */
     if (Configuration.runningMode === 'test') {
-      this.initHandler(new MockHandler());
+      this.initHandler(new STM32Handler());
       return;
     }
 
@@ -67,7 +60,7 @@ export class ModulesManager {
    * Get current status of minion. (such as minion status on off etc.)
    */
   @MutexMinionsAccess
-  public async getStatus(minion: Minion): Promise<MinionStatus | ErrorResponse> {
+  public async getStatus(minion: BluetoothMinion): Promise<BluetoothMinionStatus | ErrorResponse> {
     const minionModule = this.getMinionModule(minion.device.brand);
 
     if (!minionModule) {
@@ -80,19 +73,63 @@ export class ModulesManager {
 
     try {
       logger.debug(
-        `[ModulesManager.getStatus] getting minion "${minion.minionId}" status using "${minionModule.brandName}" module ...`,
+        `[BluetoothModulesManager.getStatus] getting minion "${minion.minionId}" status using "${minionModule.brandName}" module ...`,
       );
       const status = await withTimeout(
         minionModule.getStatus(minion),
         this.COMMUNICATE_DEVICE_TIMEOUT.asMilliseconds(),
       );
       logger.debug(
-        `[ModulesManager.getStatus] getting minion "${minion.minionId}" status "${JSON.stringify(status)}" succeed`,
+        `[BluetoothModulesManager.getStatus] getting minion "${minion.minionId}" status "${JSON.stringify(status)}" succeed`,
       );
       return status;
     } catch (error) {
       logger.warn(
-        `[ModulesManager.getStatus] getting minion "${minion.minionId}" status failed ${error.message ||
+        `[BluetoothModulesManager.getStatus] getting minion "${minion.minionId}" status failed ${error.message ||
+        JSON.stringify(error)}`,
+      );
+
+      if (error instanceof TimeoutError) {
+        throw {
+          responseCode: 1503,
+          message: 'communication with device fail, timeout',
+        } as ErrorResponse;
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Get current status of minion. (such as minion status on off etc.)
+   */
+  @MutexMinionsAccess
+  public async getBluetoothStatus(minion: BluetoothMinion): Promise<BluetoothMinionStatus | ErrorResponse> {
+    const minionModule = this.getMinionModule(minion.device.brand);
+
+    if (!minionModule) {
+      const errorResponse: ErrorResponse = {
+        responseCode: 7404,
+        message: `there is not module for -${minion.device.brand}- brand`,
+      };
+      throw errorResponse;
+    }
+
+    try {
+      logger.debug(
+        `[BluetoothModulesManager.getStatus] getting minion "${minion.minionId}" status using "${minionModule.brandName}" module ...`,
+      );
+      const status = await withTimeout(
+        minionModule.getStatus(minion),
+        this.COMMUNICATE_DEVICE_TIMEOUT.asMilliseconds(),
+      );
+      logger.debug(
+        `[BluetoothModulesManager.getStatus] getting minion "${minion.minionId}" status "${JSON.stringify(status)}" succeed`,
+      );
+      return status;
+    } catch (error) {
+      logger.warn(
+        `[BluetoothModulesManager.getStatus] getting minion "${minion.minionId}" status failed ${error.message ||
         JSON.stringify(error)}`,
       );
 
@@ -113,7 +150,7 @@ export class ModulesManager {
    * @param setStatus the new status to set.
    */
   @MutexMinionsAccess
-  public async setStatus(minion: Minion, setStatus: MinionStatus): Promise<void | ErrorResponse> {
+  public async setStatus(minion: BluetoothMinion, setStatus: BluetoothMinionStatus): Promise<void | ErrorResponse> {
     const minionModule = this.getMinionModule(minion.device.brand);
 
     if (!minionModule) {
@@ -126,14 +163,14 @@ export class ModulesManager {
 
     try {
       logger.debug(
-        `[ModulesManager.setStatus] setting minion "${minion.minionId}" status "${JSON.stringify(setStatus)}" using "${minionModule.brandName
+        `[BluetoothModulesManager.setStatus] setting minion "${minion.minionId}" status "${JSON.stringify(setStatus)}" using "${minionModule.brandName
         }" module ...`,
       );
       await withTimeout(minionModule.setStatus(minion, setStatus), this.COMMUNICATE_DEVICE_TIMEOUT.asMilliseconds());
-      logger.debug(`[ModulesManager.setStatus] setting minion "${minion.minionId}" status succeed`);
+      logger.debug(`[BluetoothModulesManager.setStatus] setting minion "${minion.minionId}" status succeed`);
     } catch (error) {
       logger.warn(
-        `[ModulesManager.getStatus] setting minion "${minion.minionId}" status failed ${error.message ||
+        `[BluetoothModulesManager.getStatus] setting minion "${minion.minionId}" status failed ${error.message ||
         JSON.stringify(error)}`,
       );
       if (error instanceof TimeoutError) {
@@ -147,6 +184,7 @@ export class ModulesManager {
     }
   }
 
+
   /**
    * Record data for current minion status.
    * Note, only few devices models support this feature.
@@ -155,7 +193,7 @@ export class ModulesManager {
    * @param statusToRecordFor the specific status to record for.
    */
   @MutexMinionsAccess
-  public async enterRecordMode(minion: Minion, statusToRecordFor: MinionStatus): Promise<void | ErrorResponse> {
+  public async enterRecordMode(minion: BluetoothMinion, statusToRecordFor: BluetoothMinionStatus): Promise<void | ErrorResponse> {
     const minionModule = this.getMinionModule(minion.device.brand);
 
     if (!minionModule) {
@@ -201,7 +239,7 @@ export class ModulesManager {
    * @param statusToGenerateFor the specific status to record for.
    */
   @MutexMinionsAccess
-  public async generateCommand(minion: Minion, statusToGenerateFor: MinionStatus): Promise<void | ErrorResponse> {
+  public async generateCommand(minion: BluetoothMinion, statusToGenerateFor: BluetoothMinionStatus): Promise<void | ErrorResponse> {
     const minionModule = this.getMinionModule(minion.device.brand);
 
     if (!minionModule) {
@@ -246,7 +284,7 @@ export class ModulesManager {
    * @param commandsSet Fetched RF commands set.
    */
   @MutexMinionsAccess
-  public async setFetchedCommands(minion: Minion, commandsSet: CommandsSet): Promise<void | ErrorResponse> {
+  public async setFetchedCommands(minion: BluetoothMinion, commandsSet: CommandsSet): Promise<void | ErrorResponse> {
     const minionModule = this.getMinionModule(minion.device.brand);
 
     if (!minionModule) {
@@ -333,27 +371,19 @@ export class ModulesManager {
     ////////////////////////////////////////////////////////////////////////
     //////////////// TO EXTEND: Init here new handler //////////////////////
     ////////////////////////////////////////////////////////////////////////
-    this.initHandler(new MockHandler());
-    this.initHandler(new TuyaHandler());
-    this.initHandler(new TasmotaHandler());
-    this.initHandler(new BroadlinkHandler());
-    this.initHandler(new YeelightHandler());
-    this.initHandler(new OrviboHandler());
-    this.initHandler(new IftttHandler());
-    this.initHandler(new MiioHandler());
-    this.initHandler(new MqttHandler());
+    this.initHandler(new STM32Handler());
   }
 
   /**
    * Hold the hendler instance and registar to minions status changed.
    * @param brandModule the handler instance.
    */
-  private initHandler(brandModule: BrandModuleBase): void {
+  private initHandler(brandModule: BluetoothBrandModuleBase): void {
     /**
      * Set pull proxy method to get all last minions array.
      */
     brandModule.retrieveMinions.setPullMethod(
-      async (): Promise<Minion[]> => {
+      async (): Promise<BluetoothMinion[]> => {
         if (!this.retrieveMinions.isPullingAvailble) {
           return [];
         }
@@ -373,7 +403,20 @@ export class ModulesManager {
    * @param brandName the brand name.
    * @returns The module instance or undefined if not exist.
    */
-  private getMinionModule(brandName: string): BrandModuleBase {
+  private getMinionModule(brandName: string): BluetoothBrandModuleBase {
+    for (const brandHandler of this.modulesHandlers) {
+      if (brandName === brandHandler.brandName) {
+        return brandHandler;
+      }
+    }
+  }
+
+  /**
+ * Get minion communication module based on brand name.
+ * @param brandName the brand name.
+ * @returns The module instance or undefined if not exist.
+ */
+  private getBluetoothMinionModule(brandName: string): BluetoothBrandModuleBase {
     for (const brandHandler of this.modulesHandlers) {
       if (brandName === brandHandler.brandName) {
         return brandHandler;
@@ -387,7 +430,7 @@ export class ModulesManager {
    * @param minionDevice the minion device to get kind for.
    * @returns The device kind.
    */
-  private getModelKind(minionsBrandModuleBase: BrandModuleBase, minionDevice: MinionDevice): DeviceKind {
+  private getModelKind(minionsBrandModuleBase: BluetoothBrandModuleBase, minionDevice: BluetoothMinionDevice): DeviceKind {
     for (const deviceKind of minionsBrandModuleBase.devices) {
       if (deviceKind.brand === minionDevice.brand && deviceKind.model === minionDevice.model) {
         return deviceKind;
@@ -396,4 +439,4 @@ export class ModulesManager {
   }
 }
 
-export const ModulesManagerSingltone = new ModulesManager();
+export const BluetoothModulesManagerSingltone = new BluetoothModulesManager();

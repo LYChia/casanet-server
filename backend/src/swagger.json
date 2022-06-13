@@ -154,7 +154,8 @@
 					"airConditioning",
 					"light",
 					"temperatureLight",
-					"colorLight"
+					"colorLight",
+					"fanOfStm32"
 				],
 				"description": "Supported minions types."
 			},
@@ -1128,6 +1129,120 @@
 				},
 				"required": [
 					"scanningStatus"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"BluetoothMinionDevice": {
+				"description": "Represents a physical device kind with network info.",
+				"properties": {
+					"pysicalDevice": {
+						"$ref": "#/components/schemas/BluetoothDevice",
+						"description": "The physical network device."
+					},
+					"brand": {
+						"type": "string",
+						"description": "The brand of device."
+					},
+					"model": {
+						"type": "string",
+						"description": "The specific model of the device."
+					},
+					"token": {
+						"type": "string",
+						"description": "Some devices require a token for communication API."
+					},
+					"deviceId": {
+						"type": "string",
+						"description": "Some devices require id for communication API."
+					}
+				},
+				"required": [
+					"pysicalDevice",
+					"brand",
+					"model"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"FanOptions": {
+				"type": "string",
+				"enum": [
+					"mode1",
+					"mode2",
+					"mode3"
+				],
+				"description": "Switches option"
+			},
+			"Fan": {
+				"description": "A fan value, the fan is on STM32 device,\r\nFor example fan has mode1, mode2, mode3",
+				"properties": {
+					"status": {
+						"$ref": "#/components/schemas/FanOptions"
+					}
+				},
+				"required": [
+					"status"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"BluetoothMinionStatus": {
+				"description": "Minion status, the available values depend on the minion type.",
+				"properties": {
+					"fan": {
+						"$ref": "#/components/schemas/Fan"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"BluetoothMinion": {
+				"description": "Represents a minion in system.\r\nMinion is a logic device in the system, meaning that a device is a physical device and minion is a logic device\r\nthat uses a physical device to switch home kit status. For example, an IR transmitter can be one physical device\r\nfor a few minions, one to central AC control and second for secondary AC control\r\nso in it will be two totally different minions that use one physical device.",
+				"properties": {
+					"minionId": {
+						"type": "string",
+						"description": "Minion unique id."
+					},
+					"name": {
+						"type": "string",
+						"description": "The display name for a minion."
+					},
+					"device": {
+						"$ref": "#/components/schemas/BluetoothMinionDevice",
+						"description": "Physical device of minion."
+					},
+					"isProperlyCommunicated": {
+						"type": "boolean",
+						"description": "Is communication with device status ok."
+					},
+					"minionStatus": {
+						"$ref": "#/components/schemas/BluetoothMinionStatus",
+						"description": "Status of minion (based on minion type)."
+					},
+					"minionType": {
+						"$ref": "#/components/schemas/MinionTypes",
+						"description": "Minion type."
+					},
+					"minionAutoTurnOffMS": {
+						"type": "number",
+						"format": "double",
+						"description": "Auto turns  off duration, *if* set member value then the minion will turn off in X ms after turning it on,\r\nUsed for example in boiler minion etc."
+					},
+					"calibration": {
+						"$ref": "#/components/schemas/MinionCalibrate",
+						"description": "Calibrate the physical device with the server known status, in a periodic cycle,\r\nand allow locking the status."
+					},
+					"room": {
+						"type": "string",
+						"description": "Represents the room where the minion is located at."
+					}
+				},
+				"required": [
+					"name",
+					"device",
+					"minionStatus",
+					"minionType"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -2418,6 +2533,59 @@
 				}
 			}
 		},
+		"/minions/bluetooth/rename/{minionId}": {
+			"put": {
+				"operationId": "RenameBluetoothMinion",
+				"responses": {
+					"204": {
+						"description": "No content"
+					},
+					"501": {
+						"description": "Server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Update minion name.",
+				"tags": [
+					"Minions"
+				],
+				"security": [
+					{
+						"userAuth": []
+					},
+					{
+						"adminAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "Minion id.",
+						"in": "path",
+						"name": "minionId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/MinionRename"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/minions/room/{minionId}": {
 			"put": {
 				"operationId": "RenameRoom",
@@ -2835,6 +3003,86 @@
 				}
 			}
 		},
+		"/minions/bluetooth/{minionId}": {
+			"delete": {
+				"operationId": "DeleteBluetoothMinion",
+				"responses": {
+					"204": {
+						"description": "No content"
+					},
+					"501": {
+						"description": "Server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Delete minion from the system.",
+				"tags": [
+					"Minions"
+				],
+				"security": [
+					{
+						"userAuth": []
+					},
+					{
+						"adminAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "Minion id.",
+						"in": "path",
+						"name": "minionId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"get": {
+				"operationId": "GetBluetoothMinion",
+				"responses": {
+					"200": {
+						"description": "Minion.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/BluetoothMinion"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get minion by id.",
+				"tags": [
+					"Minions"
+				],
+				"security": [
+					{
+						"userAuth": []
+					},
+					{
+						"adminAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "minionId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/minions": {
 			"post": {
 				"operationId": "CreateMinion",
@@ -2888,6 +3136,91 @@
 								"schema": {
 									"items": {
 										"$ref": "#/components/schemas/Minion"
+									},
+									"type": "array"
+								}
+							}
+						}
+					},
+					"501": {
+						"description": "Server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get all minions in the system.",
+				"tags": [
+					"Minions"
+				],
+				"security": [
+					{
+						"userAuth": []
+					},
+					{
+						"adminAuth": []
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/minions/bluetooth": {
+			"post": {
+				"operationId": "CreateBluetoothMinion",
+				"responses": {
+					"204": {
+						"description": "No content"
+					},
+					"501": {
+						"description": "Server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Creates a new minion.",
+				"tags": [
+					"Minions"
+				],
+				"security": [
+					{
+						"userAuth": []
+					},
+					{
+						"adminAuth": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"description": "The new minion to create.",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/BluetoothMinion"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "GetBluetoothMinions",
+				"responses": {
+					"200": {
+						"description": "Minions array.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/BluetoothMinion"
 									},
 									"type": "array"
 								}

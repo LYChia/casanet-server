@@ -7,14 +7,19 @@ import {
   IftttOnChanged,
   LocalNetworkDevice,
   Minion,
+  BluetoothMinion,
+  BluetoothMinionDevice,
   MinionCalibrate,
   MinionFeed,
+  BluetoothMinionFeed,
   MinionChangeTrigger,
   MinionStatus,
+  BluetoothMinionStatus,
   ProgressStatus,
   User,
 } from '../models/sharedInterfaces';
 import { ModulesManager, ModulesManagerSingltone } from '../modules/modulesManager';
+import { BluetoothModulesManager, BluetoothModulesManagerSingltone } from '../modules/bluetoothModulesManager';
 import { DeepCopy } from '../utilities/deepCopy';
 import { logger } from '../utilities/logger';
 import { Delay } from '../utilities/sleep';
@@ -27,17 +32,20 @@ export class MinionsBl {
    * Minions status update feed.
    */
   public minionFeed = new SyncEvent<MinionFeed>();
+  public bluetoothMinionFeed = new SyncEvent<BluetoothMinionFeed>();
   // Dependencies
   private minionsDal: MinionsDal;
   private devicesBl: DevicesBl;
   private bluetoothBl: BluetoothDevicesBl;
   private modulesManager: ModulesManager;
+  private bluetoothModulesManager: BluetoothModulesManager;
   private scanningStatus: ProgressStatus = 'finished';
 
   /**
    * minions
    */
   private minions: Minion[] = [];
+  private bluetoothMinions: BluetoothMinion[] = [];
   /**
    * The current minion in "setting" mode flag
    * Used to avoid race between the module that call the "set" and the device module change update to the timeline
@@ -67,6 +75,15 @@ export class MinionsBl {
   }
 
   /**
+   * Gets minions array.
+   */
+  public async getBluetoothMinions(): Promise<BluetoothMinion[]> {
+    return this.bluetoothMinions;
+  }
+
+
+
+  /**
    * Get minion by id.
    * @param minionId minion id.
    */
@@ -81,6 +98,22 @@ export class MinionsBl {
     }
     return minion;
   }
+
+  /**
+   * Get minion by id.
+   * @param minionId minion id.
+   */
+    public async getBluetoothMinionById(minionId: string): Promise<BluetoothMinion> {
+      const minion = this.findBluetoothMinion(minionId);
+  
+      if (!minion) {
+        throw {
+          responseCode: 1404,
+          message: 'minion not exist',
+        } as ErrorResponse;
+      }
+      return minion;
+    }
 
   /**
    * Scan all minions real status.
@@ -146,6 +179,36 @@ export class MinionsBl {
     });
   }
 
+  /**
+   * Rename minion.
+   * @param minionId minion id.
+   * @param nameToSet the new name to set.
+   */
+   public async renameBluetoothMinion(minionId: string, nameToSet: string): Promise<void> {
+    const minion = this.findBluetoothMinion(minionId);
+    if (!minion) {
+      throw {
+        responseCode: 1404,
+        message: 'minion not exist',
+      } as ErrorResponse;
+    }
+
+    minion.name = nameToSet;
+
+    try {
+      await this.minionsDal.renameBluetoothMinion(minionId, nameToSet);
+    } catch (error) {
+      logger.warn(`Fail to update minion ${minionId} with new name ${error.message}`);
+    }
+
+    /**
+     * Send minions feed update.
+     */
+    this.bluetoothMinionFeed.post({
+      event: 'update',
+      bluetoothMinion: minion,
+    });
+  }
   /**
    * Set minion room.
    * @param minionId minion id.
@@ -432,7 +495,7 @@ export class MinionsBl {
      */
     try {
       await this.readMinionStatus(minion);
-    } catch (error) {}
+    } catch (error) { }
   }
 
   /**
@@ -440,6 +503,96 @@ export class MinionsBl {
    * @param minionId minion id to delete
    */
   public async deleteMinion(minionId: string): Promise<void> {
+    const originalMinion = this.findMinion(minionId);
+    if (!originalMinion) {
+      throw {
+        responseCode: 1404,
+        message: 'minion not exist',
+      } as ErrorResponse;
+    }
+
+    await this.minionsDal.deleteMinion(originalMinion);
+
+    // The minions array is given from DAL by ref, mean if removed
+    // from dal it will removed from BL too, so check if exist
+    // (if in next someone will copy by val) and then remove.
+    if (this.minions.indexOf(originalMinion) !== -1) {
+      this.minions.splice(this.minions.indexOf(originalMinion), 1);
+    }
+
+    this.minionFeed.post({
+      event: 'removed',
+      minion: originalMinion,
+    });
+
+    // Finally clean module communication
+    await this.modulesManager.refreshModule(originalMinion.device.brand);
+  }
+
+  /**
+ * Create new minion
+ * @param minion minion to create.
+ */
+  public async createBluetoothMinion(minion: BluetoothMinion): Promise<void> {
+    /**
+     * check if minion valid.
+     */
+    const error = this.validateNewBluetoothMinion(minion);
+    if (error) {
+      throw error;
+    }
+
+    /**
+     * get local devices (to load current physical info such as ip)
+     */
+    const localDevices = await this.bluetoothBl.getDevices();
+    let foundLocalDevice = false;
+    for (const localDevice of localDevices) {
+      if (localDevice.uuid === minion.device.pysicalDevice.uuid) {
+        minion.device.pysicalDevice = localDevice;
+        foundLocalDevice = true;
+        break;
+      }
+    }
+
+    if (!foundLocalDevice) {
+      throw {
+        responseCode: 2404,
+        message: 'device not exist in lan network',
+      } as ErrorResponse;
+    }
+
+    /**
+     * Generate new id. (never trust client....)
+     */
+    minion.minionId = randomstring.generate(6);
+
+    /**
+     * Create new minion in dal.
+     */
+    await this.minionsDal.createBluetoothMinion(minion);
+
+    /**
+     * Send create new minion feed update (*before* try to get the status!!!)
+     */
+    this.bluetoothMinionFeed.post({
+      event: 'created',
+      bluetoothMinion: minion
+    });
+
+    /**
+     * Try to get current status.
+     */
+    try {
+      await this.readBluetoothMinionStatus(minion);
+    } catch (error) { }
+  }
+
+  /**
+   * Delete minion
+   * @param minionId minion id to delete
+   */
+  public async deleteBluetoothMinion(minionId: string): Promise<void> {
     const originalMinion = this.findMinion(minionId);
     if (!originalMinion) {
       throw {
@@ -619,6 +772,22 @@ export class MinionsBl {
   }
 
   /**
+ * Read minoin current status.
+ * @param minion minion to read status for.
+ */
+  private async readBluetoothMinionStatus(minion: BluetoothMinion) {
+    try {
+      const currentStatus: BluetoothMinionStatus = (await this.bluetoothModulesManager.getBluetoothStatus(minion)) as BluetoothMinionStatus;
+
+      await this.onBluetoothMinionUpdated(minion, currentStatus);
+    } catch (error) {
+      minion.isProperlyCommunicated = false;
+      logger.warn(`Fail to read status of ${minion.name} id: ${minion.minionId} err : ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
    * Read each minion current status.
    */
   private async readMinionsStatus(): Promise<void> {
@@ -652,6 +821,18 @@ export class MinionsBl {
     }
   }
 
+  /**
+ * Find minion in minions array.
+ * @param minionId minioin id.
+ */
+  private findBluetoothMinion(minionId: string): BluetoothMinion {
+    for (const minion of this.bluetoothMinions) {
+      if (minion.minionId === minionId) {
+        return minion;
+      }
+    }
+  }
+
   private async onMinionUpdated(minion: Minion, updateToStatus: MinionStatus) {
     // If the current minion in "set status" mode
     // don't override the setter module to be the one that updating the new status
@@ -669,6 +850,27 @@ export class MinionsBl {
     this.minionFeed.post({
       event: 'update',
       minion,
+      trigger: 'device',
+    });
+  }
+
+  private async onBluetoothMinionUpdated(minion: BluetoothMinion, updateToStatus: BluetoothMinionStatus) {
+    // If the current minion in "set status" mode
+    // don't override the setter module to be the one that updating the new status
+    if (this.settingStatusMode === minion.minionId) {
+      return;
+    }
+
+    /** If there is no change from last minion status */
+    if (minion.isProperlyCommunicated && JSON.stringify(minion.minionStatus) === JSON.stringify(updateToStatus)) {
+      return;
+    }
+
+    minion.isProperlyCommunicated = true;
+    minion.minionStatus = updateToStatus;
+    this.bluetoothMinionFeed.post({
+      event: 'update',
+      bluetoothMinion: minion,
       trigger: 'device',
     });
   }
@@ -725,6 +927,79 @@ export class MinionsBl {
       let minionsCount = 0;
       for (const minion of this.minions) {
         if (minion.device.pysicalDevice.mac === minionToCheck.device.pysicalDevice.mac) {
+          minionsCount++;
+        }
+      }
+
+      /**
+       * If the new minion is above max minions per device.
+       */
+      if (minionsCount >= deviceKind.minionsPerDevice) {
+        return {
+          responseCode: 4409,
+          message: 'device already in max uses with other minion',
+        };
+      }
+    }
+
+    /**
+     * ignore user selection and set corrent minion type based on model.
+     */
+    minionToCheck.minionType = deviceKind.supportedMinionType;
+  }
+
+  /**
+ * Validate new minion properties to make sure that they compatible to requires.
+ * @param minionToCheck new minion to validate.
+ */
+  private validateNewBluetoothMinion(minionToCheck: BluetoothMinion): ErrorResponse {
+    /**
+     * Get brand & model
+     */
+    let deviceKind: DeviceKind;
+    for (const kind of this.modulesManager.devicesKind) {
+      if (kind.brand === minionToCheck.device.brand && kind.model === minionToCheck.device.model) {
+        deviceKind = kind;
+      }
+    }
+
+    /**
+     * Check that model exits in barns.
+     */
+    if (!deviceKind) {
+      return {
+        responseCode: 1409,
+        message: 'there is no supported model for brand + model',
+      };
+    }
+
+    /**
+     * Check if token reqired and not exist.
+     */
+    if (deviceKind.isTokenRequired && !minionToCheck.device.token) {
+      return {
+        responseCode: 2409,
+        message: 'token is requird',
+      };
+    }
+
+    /**
+     * Check if id reqired and not exist.
+     */
+    if (deviceKind.isIdRequired && !minionToCheck.device.deviceId) {
+      return {
+        responseCode: 3409,
+        message: 'id is required',
+      };
+    }
+
+    /**
+     * If the modele is not for unlimited minoins count the used minions.
+     */
+    if (deviceKind.minionsPerDevice !== -1) {
+      let minionsCount = 0;
+      for (const minion of this.bluetoothMinions) {
+        if (minion.device.pysicalDevice.uuid === minionToCheck.device.pysicalDevice.uuid) {
           minionsCount++;
         }
       }

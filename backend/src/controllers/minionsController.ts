@@ -21,6 +21,7 @@ import {
   ErrorResponse,
   IftttOnChanged,
   Minion,
+  BluetoothMinion,
   MinionCalibrate,
   MinionRename,
   MinionSetRoomName,
@@ -79,6 +80,19 @@ export class MinionsController extends Controller {
   @Put('rename/{minionId}')
   public async renameMinion(minionId: string, @Body() minionRename: MinionRename): Promise<void> {
     return await MinionsBlSingleton.renameMinion(minionId, minionRename.name);
+  }
+
+  /**
+   * Update minion name.
+   * @param minionId Minion id.
+   * @param name Minion new name to set.
+   */
+  @Security('userAuth')
+  @Security('adminAuth')
+  @Response<ErrorResponse>(501, 'Server error')
+  @Put('bluetooth/rename/{minionId}')
+  public async renameBluetoothMinion(minionId: string, @Body() minionRename: MinionRename): Promise<void> {
+    return await MinionsBlSingleton.renameBluetoothMinion(minionId, minionRename.name);
   }
 
   /**
@@ -171,6 +185,18 @@ export class MinionsController extends Controller {
   }
 
   /**
+   * Delete minion from the system.
+   * @param minionId Minion id.
+   */
+  @Security('userAuth')
+  @Security('adminAuth')
+  @Response<ErrorResponse>(501, 'Server error')
+  @Delete('bluetooth/{minionId}')
+  public async deleteBluetoothMinion(minionId: string): Promise<void> {
+    return await MinionsBlSingleton.deleteBluetoothMinion(minionId);
+  }
+
+  /**
    *  Creates a new minion.
    * @param minion The new minion to create.
    */
@@ -180,6 +206,18 @@ export class MinionsController extends Controller {
   @Post()
   public async createMinion(@Body() minion: Minion): Promise<void> {
     return await MinionsBlSingleton.createMinion(minion);
+  }
+
+  /**
+   *  Creates a new minion.
+   * @param minion The new minion to create.
+   */
+  @Security('userAuth')
+  @Security('adminAuth')
+  @Response<ErrorResponse>(501, 'Server error')
+  @Post('bluetooth')
+  public async createBluetoothMinion(@Body() minion: BluetoothMinion): Promise<void> {
+    return await MinionsBlSingleton.createBluetoothMinion(minion);
   }
 
   /**
@@ -207,6 +245,18 @@ export class MinionsController extends Controller {
   }
 
   /**
+   * Get all minions in the system.
+   * @returns Minions array.
+   */
+  @Security('userAuth')
+  @Security('adminAuth')
+  @Response<ErrorResponse>(501, 'Server error')
+  @Get('bluetooth')
+  public async getBluetoothMinions(): Promise<BluetoothMinion[]> {
+    return this.cleanUpBluetoothMinionsBeforeRelease(await MinionsBlSingleton.getBluetoothMinions());
+  }
+
+  /**
    * Get minion by id.
    * @returns Minion.
    */
@@ -215,6 +265,17 @@ export class MinionsController extends Controller {
   @Get('{minionId}')
   public async getMinion(minionId: string): Promise<Minion> {
     return this.cleanUpMinionBeforeRelease(await MinionsBlSingleton.getMinionById(minionId));
+  }
+
+  /**
+ * Get minion by id.
+ * @returns Minion.
+ */
+  @Security('userAuth')
+  @Security('adminAuth')
+  @Get('bluetooth/{minionId}')
+  public async getBluetoothMinion(minionId: string): Promise<BluetoothMinion> {
+    return this.cleanUpBluetoothMinionBeforeRelease(await MinionsBlSingleton.getBluetoothMinionById(minionId));
   }
 
   /**
@@ -241,6 +302,17 @@ export class MinionsController extends Controller {
   }
 
   /**
+ * NEVER let anyone get device API keys.
+ * @param minion minion to remove keys from.
+ */
+  private cleanUpBluetoothMinionBeforeRelease(minion: BluetoothMinion): BluetoothMinion {
+    const minionCopy = DeepCopy<BluetoothMinion>(minion);
+    delete minionCopy.device.deviceId;
+    delete minionCopy.device.token;
+    return minionCopy;
+  }
+
+  /**
    * NEVER let anyone get device API keys.
    * @param minions minions to remove keys from.
    */
@@ -248,6 +320,18 @@ export class MinionsController extends Controller {
     const minionsCopy: Minion[] = [];
     for (const minion of minions) {
       minionsCopy.push(this.cleanUpMinionBeforeRelease(minion));
+    }
+    return minionsCopy;
+  }
+
+  /**
+   * NEVER let anyone get device API keys.
+   * @param minions minions to remove keys from.
+   */
+  private cleanUpBluetoothMinionsBeforeRelease(minions: BluetoothMinion[]): BluetoothMinion[] {
+    const minionsCopy: BluetoothMinion[] = [];
+    for (const minion of minions) {
+      minionsCopy.push(this.cleanUpBluetoothMinionBeforeRelease(minion));
     }
     return minionsCopy;
   }
